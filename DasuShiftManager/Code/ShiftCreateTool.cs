@@ -5,21 +5,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DasuShiftManager.Code;
 
-public class ShiftCreateTool(MyDbContext dbContext,VacationDataGetter vacationDataGetter)
+public class ShiftCreateTool(DataGetter dataGetter)
 {
     public async Task<List<MonthlyShiftModel>> GenerateThisMonthShift(int year,int month)
     {
-        var lastDayOfMonth = DateTime.DaysInMonth(year, month);
-        var setting = await dbContext.Setting.FirstOrDefaultAsync();
+        var setting = dataGetter.GetSetting();
         if(setting==null) throw new Exception("No settings found");
-        var vacationData = vacationDataGetter.GetVacationEmployeeList();
-        var employeeList = dbContext.Employee.ToListAsync();
-        if (employeeList.Result.Count == 0) throw new Exception("Employee not found");
+        var vacationData = dataGetter.GetVacationEmployeeList();
+        var employeeList = dataGetter.GetEmployeeList();
+        if (employeeList.Count == 0) throw new Exception("Employee not found");
         
-        var result=new List<MonthlyShiftModel>();
-        var possibleShiftQueue=new Queue<MonthlyShiftModel>();
-        var shiftIdCounter = 0;
         var currentDate = new DateOnly(year, month, setting.ShiftStartDay);
+        var msm = new MonthlyShiftModel(0,currentDate,setting,employeeList);
+        var contest = new ShiftCreateContest(setting, vacationData, employeeList, msm);
+        StartGenerate(contest);
         //Init every possible shift start
         foreach (var employee in employeeList.Result)
         {
@@ -52,6 +51,13 @@ public class ShiftCreateTool(MyDbContext dbContext,VacationDataGetter vacationDa
         
         //todo 結尾要把每天沒排到的員工加到休假
     }
+
+    private void StartGenerate(ShiftCreateContest contest)
+    {
+        var msm = contest.msm;
+        
+    }
+
 
     private static int GetRestHalfHour(int workHalfHours, Setting setting)
     {

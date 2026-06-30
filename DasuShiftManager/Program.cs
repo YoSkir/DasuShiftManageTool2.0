@@ -1,4 +1,5 @@
 using DasuShiftManager.Code;
+using DasuShiftManager.Code.Data;
 using DasuShiftManager.Code.Init;
 using DasuShiftManager.Components;
 
@@ -10,7 +11,7 @@ builder.Services.AddRazorComponents()
 
 //註冊生命週期
 builder.Services.AddTransient<ShiftCreateTool>();
-builder.Services.AddTransient<VacationDataGetter>();
+builder.Services.AddTransient<DataGetter>();
 
 var app = builder.Build();
 

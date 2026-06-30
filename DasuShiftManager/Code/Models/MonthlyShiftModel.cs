@@ -1,4 +1,6 @@
-﻿namespace DasuShiftManager.Code.Models;
+﻿using DasuShiftManager.Code.Entities;
+
+namespace DasuShiftManager.Code.Models;
 
 public class MonthlyShiftModel
 {
@@ -8,21 +10,35 @@ public class MonthlyShiftModel
     public Dictionary<DateOnly, DailyShiftModel> DailyShiftDic { get; } = new();
     public Dictionary<int, EmployeeMonthlyData> EmployeeMonthlyData { get; } = new();
     public DateOnly LastProcessingDate { get; set; }
-    public int MaxChainWorkDays { get; init; }
-    public int DailyShiftHalfHourCount { get; init; }
+    private readonly int _maxChainWorkDays;
+    private readonly int _dailyShiftHalfHourCount;
+    private readonly int[] _everyHalfHourMinWorkers;
+    private readonly int[] _everyHalfHourMinManagersOrPharmacist;
+    private readonly List<Employee> _employees;
 
 
-    public MonthlyShiftModel(int id, DateOnly firstDay,int maxChainWorkDays,int dailyShiftHalfHourCount)
+    public MonthlyShiftModel(int id, DateOnly firstDay,Setting setting,List<Employee> employees)
     {
         Id = id;
         StartDate=firstDay;
         EndDate=StartDate.AddMonths(1).AddDays(-1);
         LastProcessingDate = StartDate;
-        MaxChainWorkDays = maxChainWorkDays;
-        DailyShiftHalfHourCount = dailyShiftHalfHourCount;
+        _maxChainWorkDays = setting.MaxChainWorkDays;
+        _dailyShiftHalfHourCount = setting.ShiftHalfHourCount;
+        _everyHalfHourMinWorkers = new int[_dailyShiftHalfHourCount];
+        _everyHalfHourMinManagersOrPharmacist = new int[_dailyShiftHalfHourCount];
+        int mw = 0, mm = 0;
+        for (var i = 0; i < _dailyShiftHalfHourCount; i++)
+        {
+            mw = setting.EveryHalfHourMinWorkers.GetValueOrDefault(i, mw);
+            _everyHalfHourMinWorkers[i] = mw;
+            mm = setting.EveryHalfHourMinManagersOrPharmacist.GetValueOrDefault(i, mm);
+            _everyHalfHourMinManagersOrPharmacist[i] = mm;
+        }
+        _employees = employees;
         for (var date = StartDate; date <= EndDate; date = date.AddDays(1))
         {
-            DailyShiftDic[date] = new DailyShiftModel(date,DailyShiftHalfHourCount);
+            DailyShiftDic[date] = new DailyShiftModel(date,_dailyShiftHalfHourCount,_everyHalfHourMinWorkers,_everyHalfHourMinManagersOrPharmacist);
         }
     }
 
@@ -32,22 +48,36 @@ public class MonthlyShiftModel
         StartDate = copyShift.StartDate;
         EndDate = copyShift.EndDate;
         LastProcessingDate = copyShift.LastProcessingDate;
-        MaxChainWorkDays = copyShift.MaxChainWorkDays;
-        DailyShiftHalfHourCount = copyShift.DailyShiftHalfHourCount;
+        _maxChainWorkDays = copyShift._maxChainWorkDays;
+        _dailyShiftHalfHourCount = copyShift._dailyShiftHalfHourCount;
+        _everyHalfHourMinWorkers = copyShift._everyHalfHourMinWorkers;
+        _everyHalfHourMinManagersOrPharmacist = copyShift._everyHalfHourMinManagersOrPharmacist;
+        _employees = copyShift._employees;
         DailyShiftDic = copyShift.DailyShiftDic.ToDictionary(
             pair=>pair.Key,pair=>new DailyShiftModel(pair.Value));
         EmployeeMonthlyData = copyShift.EmployeeMonthlyData.ToDictionary(
             k=>k.Key,k=>new EmployeeMonthlyData(k.Value));
     }
 
+    public bool IsDone()
+    {
+        return LastProcessingDate > EndDate;
+    }
+
     public bool AddWorker(DateOnly date, int employeeId, int startHalfHour, int workHalfHours,bool isManager)
     {
-        if(!DailyShiftDic[date].AddWorker(employeeId, startHalfHour, workHalfHours,isManager)) return false;
+        var ds = DailyShiftDic[date];
+        if(!ds.AddWorker(employeeId, startHalfHour, workHalfHours,isManager)) return false;
+        if (ds.IsDone())
+        {
+            LastProcessingDate = LastProcessingDate.AddDays(1);
+            ds.HandleEmptyEmployee(_employees);
+        }
         var data=GetEmployeeMonthlyData(employeeId);
         data.TotalWorkHalfHour+=workHalfHours;
         var lastRestDate = data.LastRestDate == DateOnly.MinValue ? StartDate.AddDays(-1) : data.LastRestDate;
         data.LongestChainShift = Math.Max(data.LongestChainShift, date.DayNumber - lastRestDate.DayNumber);
-        return data.LongestChainShift<MaxChainWorkDays;
+        return data.LongestChainShift<_maxChainWorkDays;
     }
 
     public bool AddDayOffWorker(DateOnly date, int employeeId)
@@ -74,7 +104,7 @@ public class MonthlyShiftModel
     }
 }
 
-public class DailyShiftModel(DateOnly date,int shiftHalfHourCount)
+public class DailyShiftModel(DateOnly date,int shiftHalfHourCount,int[] everyHalfHourMinWorkers,int[] everyHalfHourMinManagersOrPharmacist)
 {
     public DateOnly ShiftDate { get; init; } = date;
     public Dictionary<int, EmployeeShiftModel> EmployeeShiftDic { get; } = new();
@@ -82,8 +112,11 @@ public class DailyShiftModel(DateOnly date,int shiftHalfHourCount)
     public int[] HalfHourManagerCount { get; } = new int[shiftHalfHourCount];
     public HashSet<int> InShiftEmployee { get; } = [];
     public int LastProcessingHalfHour { get; set; }
+    private readonly int[] _everyHalfHourMinWorkers=everyHalfHourMinWorkers;
+    private readonly int[] _everyHalfHourMinManagersOrPharmacist=everyHalfHourMinManagersOrPharmacist;
     
-    public DailyShiftModel(DailyShiftModel copyModel):this(copyModel.ShiftDate,copyModel.HalfHourAllTypeWorkerCount.Length)
+    public DailyShiftModel(DailyShiftModel copyModel):this(copyModel.ShiftDate,copyModel.HalfHourAllTypeWorkerCount.Length,
+        copyModel._everyHalfHourMinWorkers,copyModel._everyHalfHourMinManagersOrPharmacist)
     {
         EmployeeShiftDic = copyModel.EmployeeShiftDic.ToDictionary(p=>p.Key,
             p=>new EmployeeShiftModel(p.Value));
@@ -119,6 +152,19 @@ public class DailyShiftModel(DateOnly date,int shiftHalfHourCount)
         }
         EmployeeShiftDic[workerId] = new EmployeeShiftModel(workerId);
         return true;
+    }
+
+    public void HandleEmptyEmployee(List<Employee> employees)
+    {
+        foreach (var employee in employees.Where(employee => !InShiftEmployee.Add(employee.Id)))
+        {
+            EmployeeShiftDic[employee.Id] = new EmployeeShiftModel(employee.Id);
+        }
+    }
+
+    public bool IsDone()
+    {
+
     }
 }
 
