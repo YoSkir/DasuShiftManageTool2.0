@@ -13,4 +13,6 @@ public class Setting
     public Dictionary<int, int> EveryHalfHourMinWorkers { get; init; } = new();
     public Dictionary<int, int> EveryHalfHourMinManagersOrPharmacist { get; init; } = new();
     public int MaxChainWorkDays { get; init; }
+    public int MinWeekRestDays { get; init; }
+    public int MinMonthWorkHours { get; init; }
 }
