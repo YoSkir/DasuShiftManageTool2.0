@@ -2,7 +2,7 @@
 
 namespace DasuShiftManager.Code.Models;
 
-public class MonthlyShiftModel
+public class MonthlyShiftModelWFS : IMonthlyShiftModel
 {
     public int Id { get; init; }
     public DateOnly StartDate { get; init; }
@@ -17,7 +17,7 @@ public class MonthlyShiftModel
     private readonly List<Employee> _employees;
 
 
-    public MonthlyShiftModel(int id, DateOnly firstDay,Setting setting,List<Employee> employees)
+    public MonthlyShiftModelWFS(int id, DateOnly firstDay,Setting setting,List<Employee> employees)
     {
         Id = id;
         StartDate=firstDay;
@@ -42,7 +42,7 @@ public class MonthlyShiftModel
         }
     }
 
-    public MonthlyShiftModel(MonthlyShiftModel copyShift, int id)
+    public MonthlyShiftModelWFS(MonthlyShiftModelWFS copyShift, int id)
     {
         Id = id;
         StartDate = copyShift.StartDate;
@@ -164,7 +164,7 @@ public class DailyShiftModel(DateOnly date,int shiftHalfHourCount,int[] everyHal
 
     public bool IsDone()
     {
-
+        return false;
     }
 }
 

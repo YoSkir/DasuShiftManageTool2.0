@@ -19,7 +19,9 @@ public class InitService(MyDbContext dbContext)
                 SecondBreakActiveWorkHalfHrs = 20,
                 FirstBreakDurationHalfHrs = 1,
                 SecondBreakDurationHalfHrs = 2,
-                MaxChainWorkDays = 5
+                MaxChainWorkDays = 6,
+                MinWeekRestDays = 2,
+                MinMonthWorkHours = 152
             };
             await dbContext.AddAsync(setting);
         }

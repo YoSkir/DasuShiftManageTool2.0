@@ -1,5 +1,6 @@
 ﻿using DasuShiftManager.Code.Data;
 using DasuShiftManager.Code.Entities;
+using DasuShiftManager.Code.GenerateTool;
 using DasuShiftManager.Code.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +8,7 @@ namespace DasuShiftManager.Code;
 
 public class ShiftCreateTool(DataGetter dataGetter)
 {
-    public async Task<List<MonthlyShiftModel>> GenerateThisMonthShift(int year,int month)
+    public async Task<List<MonthlyShiftModelWFS>> GenerateThisMonthShift(int year,int month,IShiftGenerator generator)
     {
         var setting = dataGetter.GetSetting();
         if(setting==null) throw new Exception("No settings found");
@@ -16,46 +17,9 @@ public class ShiftCreateTool(DataGetter dataGetter)
         if (employeeList.Count == 0) throw new Exception("Employee not found");
         
         var currentDate = new DateOnly(year, month, setting.ShiftStartDay);
-        var msm = new MonthlyShiftModel(0,currentDate,setting,employeeList);
+        var msm = generator.GetShiftModel(currentDate,employeeList,setting);
         var contest = new ShiftCreateContest(setting, vacationData, employeeList, msm);
-        StartGenerate(contest);
-        //Init every possible shift start
-        foreach (var employee in employeeList.Result)
-        {
-            if (vacationData.TryGetValue(currentDate, out var vacationList) &&
-                vacationList.Contains(employee.Id))
-            {
-                var msm = new MonthlyShiftModel(shiftIdCounter++,currentDate,setting.MaxChainWorkDays,setting.ShiftHalfHourCount);
-                possibleShiftQueue.Enqueue(msm);
-                msm.AddDayOffWorker(currentDate, employee.Id);
-                continue;
-            }
-            if(setting.ShiftHalfHourType.Count==0) setting.ShiftHalfHourType.Add(8);
-            var isManager = employee.EmployeeType != EmployeeType.Normal&&employee.EmployeeType!=EmployeeType.Pt;
-            foreach (var halfHour in setting.ShiftHalfHourType)
-            {
-                var msm = new MonthlyShiftModel(shiftIdCounter++,currentDate,setting.MaxChainWorkDays,setting.ShiftHalfHourCount);
-                possibleShiftQueue.Enqueue(msm);
-                var restIncludedWorkHour = halfHour + GetRestHalfHour(halfHour,setting);
-                msm.AddWorker(currentDate, employee.Id, 0, restIncludedWorkHour,isManager);
-            }
-        }
-
-        //todo 先試試看不篩選最低主管或藥師需求，讓使用者加
-        // 或是先篩選，如果沒有任何結果就把這個條件拿掉再跑一次
-        while (possibleShiftQueue.Count > 0)
-        {
-            var msm = possibleShiftQueue.Dequeue();
-            currentDate = msm.LastProcessingDate;
-        }
-        
-        //todo 結尾要把每天沒排到的員工加到休假
-    }
-
-    private void StartGenerate(ShiftCreateContest contest)
-    {
-        var msm = contest.msm;
-        
+        generator.StartGenerate(contest);
     }
 
 
