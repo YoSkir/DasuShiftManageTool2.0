@@ -6,7 +6,7 @@ namespace DasuShiftManager.Code;
 public class ShiftCreateContest(Setting setting,
     Dictionary<DateOnly, List<int>> vacationData, List<Employee> employeeList, IMonthlyShiftModel msm)
 {
-    public List<MonthlyShiftModelWFS> Result { get; init; } = [];
+    public List<MonthlyShiftModelBFS> Result { get; init; } = [];
     public Setting Setting { get; init; } = setting;
     public Dictionary<DateOnly, List<int>> VacationData { get; init; } = vacationData;
     public List<Employee> EmployeeList { get; init; } = employeeList;
