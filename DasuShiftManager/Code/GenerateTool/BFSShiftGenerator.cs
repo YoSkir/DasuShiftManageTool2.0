@@ -43,6 +43,6 @@ public class BFSShiftGenerator : IShiftGenerator
 
     public IMonthlyShiftModel GetShiftModel(DateOnly startDate, List<Employee> employeeList, Setting setting)
     {
-        return new MonthlyShiftModelBFS(startDate, setting, employeeList);
+        return new MonthlyShiftModelDFS(startDate, setting, employeeList);
     }
 }

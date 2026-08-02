@@ -8,7 +8,7 @@ namespace DasuShiftManager.Code;
 
 public class ShiftCreateTool(DataGetter dataGetter)
 {
-    public async Task<List<MonthlyShiftModelWFS>> GenerateThisMonthShift(int year,int month,IShiftGenerator generator)
+    public async Task<List<MonthlyShiftModelBFS>> GenerateThisMonthShift(int year,int month,IShiftGenerator generator)
     {
         var setting = dataGetter.GetSetting();
         if(setting==null) throw new Exception("No settings found");
