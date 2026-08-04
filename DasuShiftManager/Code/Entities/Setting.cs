@@ -3,16 +3,17 @@
 public class Setting
 {
     public int ShiftStartDay { get; init; }
-    public TimeOnly ShiftStartTime { get; init; }
-    public int ShiftHalfHourCount { get; init; }
+    public int ShiftStartHalfHr { get; init; }
+    public int ShiftHalfHrCount { get; init; }
     public int FirstBreakActiveWorkHalfHrs { get; init; }
     public int FirstBreakDurationHalfHrs {get; init;}
     public int SecondBreakActiveWorkHalfHrs { get; init; }
     public int SecondBreakDurationHalfHrs { get; init; }
-    public List<int> ShiftHalfHourType { get; init; } = [12,16,20,24];
-    public Dictionary<int, int> EveryHalfHourMinWorkers { get; init; } = new();
-    public Dictionary<int, int> EveryHalfHourMinManagersOrPharmacist { get; init; } = new();
+    public List<int> ShiftHalfHrType { get; init; } = [12,16,20,24];
+    public Dictionary<int, int> EveryHalfHrMinWorkers { get; init; } = new();
+    public Dictionary<int, int> EveryHalfHrMinManagersOrPharmacist { get; init; } = new();
     public int MaxChainWorkDays { get; init; }
     public int MinWeekRestDays { get; init; }
-    public int MinMonthWorkHours { get; init; }
+    public int MinMonthWorkHrs { get; init; }
+    public Dictionary<int, DailyShift[]> FixedShiftStaff { get; init; } = new();
 }

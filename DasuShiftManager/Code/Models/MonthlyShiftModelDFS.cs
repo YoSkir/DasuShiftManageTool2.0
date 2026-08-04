@@ -6,19 +6,61 @@ public class MonthlyShiftModelDFS :IMonthlyShiftModel
 {
     //排入員工歷史紀錄，方便遞迴時回溯狀態
     private readonly Stack<AssignMove> _assignHistory = new();
-    //todo 每日的arr只記人數，另有個員工當月班別，這樣回溯時只需要知道員工與日期 並且扣去人數
+    
+    //這裡把字典的獲取另外抽離，減少獲取內容時檢查的程式碼，並且將未來可能的檢查與錯誤處理留下擴充空間
+    //已排的每日半時員工數
+    private readonly Dictionary<DateOnly, int[]> _monthHalfHrStaffCounts = new();
+    private int[] _getDailyHHSC(DateOnly date)
+    {
+        if (_monthHalfHrStaffCounts.TryGetValue(date, out var hhsc) || hhsc == null)
+        {
+            throw new InvalidOperationException($"Date {date.ToShortDateString()} half hour staff counts not found");
+        }
+        return hhsc;
+    }
+    //員工id對應的當月排班狀態
+    private readonly Dictionary<int,StaffShift> _staffShifts = new();
+    private StaffShift _getStaffShift(int staffId)
+    {
+        if (_staffShifts.TryGetValue(staffId, out var staffShift)||staffShift==null)
+        {
+            throw new InvalidOperationException($"Staff id: {staffId} shift not found");
+        }
+        return staffShift;
+    }
     
     public MonthlyShiftModelDFS(DateOnly firstDay, Setting setting, List<Staff> staffs)
     {
-        
+        foreach (var staff in staffs)
+        {
+            _staffShifts[staff.Id] = new StaffShift();
+        }
+
+        var lastDay = firstDay.AddMonths(1);
+        while (firstDay <= lastDay)
+        {
+            _monthHalfHrStaffCounts[firstDay] = new int[setting.ShiftHalfHrCount];
+            firstDay.AddDays(1);
+        }
     }
     
-    public bool IsDone()
+    
+    public bool IsMonthDone()
     {
         throw new NotImplementedException();
     }
 
-    public bool AssignStaff(DateOnly date, int staffId, int startHalfHour, int workHalfHours, bool isManager)
+    public bool IsDateDone(DateOnly date)
+    {
+        throw new NotImplementedException();
+    }
+
+    public int GetCurrentDateMinUndoneHalfHr(DateOnly date)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool AssignStaff(DateOnly date, int staffId, int startArrHalfHr, int workHalfHrs, bool isManager)
     {
         throw new NotImplementedException();
     }
@@ -28,7 +70,7 @@ public class MonthlyShiftModelDFS :IMonthlyShiftModel
         throw new NotImplementedException();
     }
 
-    public int GetWorkerCount(DateOnly date, int halfHour)
+    public int GetWorkerCount(DateOnly date, int halfHr)
     {
         throw new NotImplementedException();
     }
@@ -36,6 +78,11 @@ public class MonthlyShiftModelDFS :IMonthlyShiftModel
     public void UnassignStaff()
     {
         throw new NotImplementedException();
+    }
+
+    public bool IsStaffAlreadyAssigned(DateOnly date, int staffId)
+    {
+        return _getStaffShift(staffId).IsAlreadyAssigned(date);
     }
 }
 
@@ -47,5 +94,10 @@ public class AssignMove(DateOnly date,int staffId)
 
 public class StaffShift
 {
-    
+    public readonly Dictionary<DateOnly, DailyShift> MonthShift = new();
+
+    public bool IsAlreadyAssigned(DateOnly date)
+    {
+        return MonthShift.ContainsKey(date);
+    }
 }

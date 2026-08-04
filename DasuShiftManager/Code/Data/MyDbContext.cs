@@ -12,12 +12,12 @@ public class MyDbContext:DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Setting>()
-            .Property(b => b.EveryHalfHourMinWorkers)
+            .Property(b => b.EveryHalfHrMinWorkers)
             .HasConversion(
                 v=>JsonSerializer.Serialize(v,(JsonSerializerOptions)null!),
                 v=>JsonSerializer.Deserialize<Dictionary<int,int>>(v,(JsonSerializerOptions)null!)??new Dictionary<int, int>());
         modelBuilder.Entity<Setting>()
-            .Property(b => b.EveryHalfHourMinManagersOrPharmacist)
+            .Property(b => b.EveryHalfHrMinManagersOrPharmacist)
             .HasConversion(
                 v=>JsonSerializer.Serialize(v,(JsonSerializerOptions)null!),
                 v=>JsonSerializer.Deserialize<Dictionary<int,int>>(v,(JsonSerializerOptions)null!)??new Dictionary<int, int>());

@@ -2,10 +2,13 @@
 
 public interface IMonthlyShiftModel
 {
-    bool IsDone();
-    bool AssignStaff(DateOnly date, int staffId, int startHalfHour, int workHalfHours, bool isManager);
+    bool IsMonthDone();
+    bool IsDateDone(DateOnly date);
+    int GetCurrentDateMinUndoneHalfHr(DateOnly date);
+    bool AssignStaff(DateOnly date, int staffId, int startArrHalfHr, int workHalfHrs, bool isManager);
     bool AssignStaff(DateOnly date, int staffId);
-    int GetWorkerCount(DateOnly date, int halfHour);
+    int GetWorkerCount(DateOnly date, int halfHr);
     void UnassignStaff();
+    bool IsStaffAlreadyAssigned(DateOnly date, int staffId);
     //todo 生成結果的函示
 }

@@ -13,15 +13,15 @@ public class InitService(MyDbContext dbContext)
         {
             setting = new Setting{
                 ShiftStartDay = 1,
-                ShiftStartTime = new TimeOnly(9,0),
-                ShiftHalfHourCount = 26,
+                ShiftStartHalfHr = 18,
+                ShiftHalfHrCount = 26,
                 FirstBreakActiveWorkHalfHrs = 12,
                 SecondBreakActiveWorkHalfHrs = 20,
                 FirstBreakDurationHalfHrs = 1,
                 SecondBreakDurationHalfHrs = 2,
                 MaxChainWorkDays = 6,
                 MinWeekRestDays = 2,
-                MinMonthWorkHours = 152
+                MinMonthWorkHrs = 152
             };
             await dbContext.AddAsync(setting);
         }

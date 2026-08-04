@@ -20,7 +20,7 @@ public class ShiftCreateTool(DataGetter dataGetter)
         
         var currentDate = new DateOnly(year, month, setting.ShiftStartDay);
         var msm = generator.GetShiftModel(currentDate,staffList,setting);
-        var contest = new ShiftCreateContest(setting, vacationData, staffList, msm);
+        var contest = new ShiftCreateContest(setting, vacationData, staffList, msm,currentDate);
         generator.StartGenerate(contest);
         
         return contest.GenerateResult();
