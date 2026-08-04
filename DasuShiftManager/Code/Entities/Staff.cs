@@ -1,13 +1,13 @@
 ﻿namespace DasuShiftManager.Code.Entities;
 
-public class Employee
+public class Staff
 {
     public int Id { get; init; }
     public string Name { get; set; }=string.Empty;
-    public EmployeeType EmployeeType { get; set; }
+    public StaffType StaffType { get; set; }
 }
 
-public enum EmployeeType
+public enum StaffType
 {
     Normal,Manager,Pharmacist,Pt
 }

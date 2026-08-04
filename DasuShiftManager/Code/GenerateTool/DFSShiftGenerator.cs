@@ -16,7 +16,7 @@ public class DFSShiftGenerator : IShiftGenerator
         //todo 思考回溯時是否也包含推進日期與時程 如果沒有的話 可能每輪都需要從第一天開始掃描
     }
 
-    public IMonthlyShiftModel GetShiftModel(DateOnly startDate, List<Employee> employeeList, Setting setting)
+    public IMonthlyShiftModel GetShiftModel(DateOnly startDate, List<Staff> staffList, Setting setting)
     {
         throw new NotImplementedException();
     }

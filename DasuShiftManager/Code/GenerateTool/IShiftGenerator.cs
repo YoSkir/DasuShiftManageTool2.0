@@ -6,5 +6,5 @@ namespace DasuShiftManager.Code.GenerateTool;
 public interface IShiftGenerator
 {
     void StartGenerate(ShiftCreateContest contest);
-    IMonthlyShiftModel GetShiftModel(DateOnly startDate,List<Employee> employeeList,Setting setting);
+    IMonthlyShiftModel GetShiftModel(DateOnly startDate,List<Staff> staffList,Setting setting);
 }

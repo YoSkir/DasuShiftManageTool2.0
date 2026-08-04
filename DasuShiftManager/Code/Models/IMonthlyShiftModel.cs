@@ -3,10 +3,9 @@
 public interface IMonthlyShiftModel
 {
     bool IsDone();
-    bool AssignWorker(DateOnly date, int employeeId, int startHalfHour, int workHalfHours, bool isManager);
-    bool AssignWorker(DateOnly date, int employeeId);
+    bool AssignStaff(DateOnly date, int staffId, int startHalfHour, int workHalfHours, bool isManager);
+    bool AssignStaff(DateOnly date, int staffId);
     int GetWorkerCount(DateOnly date, int halfHour);
-
-    void UnassignWorker();
+    void UnassignStaff();
     //todo 生成結果的函示
 }

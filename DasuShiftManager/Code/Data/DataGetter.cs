@@ -4,7 +4,7 @@ namespace DasuShiftManager.Code;
 
 public class DataGetter
 {
-    public Dictionary<DateOnly, List<int>> GetVacationEmployeeList()
+    public Dictionary<DateOnly, List<int>> GetVacationStaffList()
     {
         return new();
     }
@@ -14,7 +14,7 @@ public class DataGetter
         throw new NotImplementedException();
     }
 
-    public List<Employee> GetEmployeeList()
+    public List<Staff> GetStaffList()
     {
         throw new NotImplementedException();
     }

@@ -7,7 +7,7 @@ namespace DasuShiftManager.Code.Data;
 public class MyDbContext:DbContext
 {
     public DbSet<Setting> Setting { get; set; }
-    public DbSet<Employee> Employee { get; set; }
+    public DbSet<Staff> Staff { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

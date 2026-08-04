@@ -8,7 +8,7 @@ public class MonthlyShiftModelDFS :IMonthlyShiftModel
     private readonly Stack<AssignMove> _assignHistory = new();
     //todo 每日的arr只記人數，另有個員工當月班別，這樣回溯時只需要知道員工與日期 並且扣去人數
     
-    public MonthlyShiftModelDFS(DateOnly firstDay, Setting setting, List<Employee> employees)
+    public MonthlyShiftModelDFS(DateOnly firstDay, Setting setting, List<Staff> staffs)
     {
         
     }
@@ -18,12 +18,12 @@ public class MonthlyShiftModelDFS :IMonthlyShiftModel
         throw new NotImplementedException();
     }
 
-    public bool AssignWorker(DateOnly date, int employeeId, int startHalfHour, int workHalfHours, bool isManager)
+    public bool AssignStaff(DateOnly date, int staffId, int startHalfHour, int workHalfHours, bool isManager)
     {
         throw new NotImplementedException();
     }
 
-    public bool AssignWorker(DateOnly date, int employeeId)
+    public bool AssignStaff(DateOnly date, int staffId)
     {
         throw new NotImplementedException();
     }
@@ -33,16 +33,19 @@ public class MonthlyShiftModelDFS :IMonthlyShiftModel
         throw new NotImplementedException();
     }
 
-    public void UnassignWorker()
+    public void UnassignStaff()
     {
         throw new NotImplementedException();
     }
 }
 
-public class AssignMove(DateOnly date,int employeeId,int startHalfHour,int workHalfHours)
+public class AssignMove(DateOnly date,int staffId)
 {
-    public DateOnly Date { get; init; }
-    public int EmployeeId { get; init; }
-    public int StartHalfHour { get; init; }
-    public int WorkHalfHours { get; init; }
+    public DateOnly Date { get; init; } = date;
+    public int StaffId { get; init; }=staffId;
+}
+
+public class StaffShift
+{
+    
 }
