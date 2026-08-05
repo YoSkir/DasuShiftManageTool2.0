@@ -23,7 +23,7 @@ public class DFSShiftGenerator : IShiftGenerator
             {
                 var shift = fixedPair.Value?[weekday];
                 if(shift==null||shift.DayOff) continue;
-                if(!contest.Msm.AssignStaff(date, fixedPair.Key, shift.StartHalfHr, shift.WorkHalfHrs, false))
+                if(!contest.Msm.AssignStaff(date, fixedPair.Key, shift.StartHalfHr, shift.WorkHalfHrs, StaffType.Normal))
                     throw new InvalidOperationException($"Fixed shift assignment failed, staff id: {fixedPair.Key}");
             }
             date.AddDays(1);
@@ -54,9 +54,10 @@ public class DFSShiftGenerator : IShiftGenerator
         //嘗試排班
         foreach (var ss in from staff in contest.GetAvailableStaffs(date)
                  from shiftHalfHr in contest.Setting.ShiftHalfHrType
+                 where shiftHalfHr<=contest.Setting.ShiftHalfHrCount-arrHalfHr
                  select new {staff,shiftHalfHr})
         {
-            if(!contest.Msm.AssignStaff(date,ss.staff.Id,arrHalfHr,ss.shiftHalfHr,ss.staff.StaffType==StaffType.Manager))
+            if(!contest.Msm.AssignStaff(date,ss.staff.Id,arrHalfHr,ss.shiftHalfHr,ss.staff.StaffType))
                 continue;
             ShiftDFS(contest, date, arrHalfHr);
             contest.Msm.UnassignStaff();

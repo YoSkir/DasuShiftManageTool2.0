@@ -43,25 +43,10 @@ public class MonthlyShiftModelDFS :IMonthlyShiftModel
             firstDay.AddDays(1);
         }
     }
-    
-    
-    public bool IsMonthDone()
-    {
-        throw new NotImplementedException();
-    }
 
-    public bool IsDateDone(DateOnly date)
+    public bool AssignStaff(DateOnly date, int staffId, int startArrHalfHr, int workHalfHrs, StaffType staffType)
     {
-        throw new NotImplementedException();
-    }
-
-    public int GetCurrentDateMinUndoneHalfHr(DateOnly date)
-    {
-        throw new NotImplementedException();
-    }
-
-    public bool AssignStaff(DateOnly date, int staffId, int startArrHalfHr, int workHalfHrs, bool isManager)
-    {
+        //班別是否會溢出已在遞迴處檢查 因為還有固定班別 所以這裡可以考慮溢出不管 直接排到底 或是再做一次溢出檢查
         throw new NotImplementedException();
     }
 

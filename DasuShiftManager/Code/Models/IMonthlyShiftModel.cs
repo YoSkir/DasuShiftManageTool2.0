@@ -1,11 +1,10 @@
-﻿namespace DasuShiftManager.Code.Models;
+﻿using DasuShiftManager.Code.Entities;
+
+namespace DasuShiftManager.Code.Models;
 
 public interface IMonthlyShiftModel
 {
-    bool IsMonthDone();
-    bool IsDateDone(DateOnly date);
-    int GetCurrentDateMinUndoneHalfHr(DateOnly date);
-    bool AssignStaff(DateOnly date, int staffId, int startArrHalfHr, int workHalfHrs, bool isManager);
+    bool AssignStaff(DateOnly date, int staffId, int startArrHalfHr, int workHalfHrs, StaffType staffType);
     bool AssignStaff(DateOnly date, int staffId);
     int GetWorkerCount(DateOnly date, int halfHr);
     void UnassignStaff();
