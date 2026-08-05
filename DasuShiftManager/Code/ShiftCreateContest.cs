@@ -3,15 +3,31 @@ using DasuShiftManager.Code.Models;
 
 namespace DasuShiftManager.Code;
 
-public class ShiftCreateContest(Setting setting,
-    Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IMonthlyShiftModel msm,DateOnly startDate)
+public class ShiftCreateContest
 {
-    public DateOnly StartDate { get; init; } = startDate;
-    public Setting Setting { get; init; } = setting;
-    public Dictionary<DateOnly, List<int>> VacationData { get; init; } = vacationData;
-    public List<Staff> StaffList { get; init; } = staffList;
-    public IMonthlyShiftModel Msm { get; init; } = msm;
+    public DateOnly StartDate { get; init; }
+    public Setting Setting { get; init; }
+    public Dictionary<DateOnly, List<int>> VacationData { get; init; }
+    public List<Staff> StaffList { get; init; }
+    public IMonthlyShiftModel Msm { get; init; }
     public int IdCount { get; set; }
+    public int MinShiftHalfHr { get; init; }
+
+    public ShiftCreateContest(Setting setting,
+        Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IMonthlyShiftModel msm,DateOnly startDate)
+    {
+        StartDate = startDate;
+        Setting= setting;
+        VacationData = vacationData;
+        StaffList = staffList;
+        Msm = msm;
+        if(setting.ShiftHalfHrType==null||setting.ShiftHalfHrType.Count==0)
+            throw new InvalidOperationException("ShiftHalfHrType is null or empty");
+        MinShiftHalfHr = setting.ShiftHalfHrType.Min();
+        IdCount = 0;
+        if(setting.EveryHalfHrMinWorkers.Length!=setting.ShiftHalfHrCount)
+            throw new InvalidOperationException("EveryHalfHrMinWorkers is not equal to half hr count");
+    }
 
     public ShiftCreateResult GenerateResult()
     {

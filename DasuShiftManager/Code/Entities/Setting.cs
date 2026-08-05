@@ -10,8 +10,8 @@ public class Setting
     public int SecondBreakActiveWorkHalfHrs { get; init; }
     public int SecondBreakDurationHalfHrs { get; init; }
     public List<int> ShiftHalfHrType { get; init; } = [12,16,20,24];
-    public Dictionary<int, int> EveryHalfHrMinWorkers { get; init; } = new();
-    public Dictionary<int, int> EveryHalfHrMinManagersOrPharmacist { get; init; } = new();
+    public int[] EveryHalfHrMinWorkers { get; init; } = [];
+    public int[] EveryHalfHrMinManagersOrPharmacist { get; init; }=[];
     public int MaxChainWorkDays { get; init; }
     public int MinWeekRestDays { get; init; }
     public int MinMonthWorkHrs { get; init; }
