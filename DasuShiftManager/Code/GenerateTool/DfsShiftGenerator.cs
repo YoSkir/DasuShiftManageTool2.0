@@ -1,16 +1,29 @@
 ﻿using DasuShiftManager.Code.Entities;
-using DasuShiftManager.Code.Models;
+using DasuShiftManager.Code.Shift;
 
 namespace DasuShiftManager.Code.GenerateTool;
 
-public class DFSShiftGenerator : IShiftGenerator
+public class DfsShiftGenerator : IShiftGenerator
 {
     public void StartGenerate(ShiftCreateContest contest)
     {
-        //把固定班別員工排入
+        //劃假排入
+        AssignDayOff(contest);
+        //固定班別排入
         AssignFixedShiftStaff(contest);
         //遞迴排班
-        ShiftDFS(contest,contest.StartDate,0);
+        ShiftDfs(contest,contest.StartDate,0);
+    }
+
+    private void AssignDayOff(ShiftCreateContest contest)
+    {
+        foreach (var dayOffData in from pair in contest.VacationData
+                 let date=pair.Key
+                 from id in pair.Value
+                 select new {date,id})
+        {
+            contest.ShiftState.AssignStaffDayOff(dayOffData.date,dayOffData.id);
+        }
     }
 
     private void AssignFixedShiftStaff(ShiftCreateContest contest)
@@ -23,14 +36,14 @@ public class DFSShiftGenerator : IShiftGenerator
             {
                 var shift = fixedPair.Value?[weekday];
                 if(shift==null||shift.DayOff) continue;
-                if(!contest.Msm.AssignStaff(date, fixedPair.Key, shift.StartHalfHr, shift.WorkHalfHrs, StaffType.Normal))
+                if(!contest.ShiftState.AssignStaff(date, fixedPair.Key, shift.StartHalfHr, shift.WorkHalfHrs, StaffType.Normal))
                     throw new InvalidOperationException($"Fixed shift assignment failed, staff id: {fixedPair.Key}");
             }
             date.AddDays(1);
         }
     }
 
-    private void ShiftDFS(ShiftCreateContest contest, DateOnly date, int arrHalfHr)
+    private void ShiftDfs(ShiftCreateContest contest, DateOnly date, int arrHalfHr)
     {
         //存結果條件
         if (date >= contest.StartDate.AddMonths(1))
@@ -48,7 +61,7 @@ public class DFSShiftGenerator : IShiftGenerator
                 arrHalfHr = 0;
                 date.AddDays(1);
             }
-            ShiftDFS(contest, date, arrHalfHr);
+            ShiftDfs(contest, date, arrHalfHr);
             return;
         }
         //嘗試排班
@@ -57,10 +70,10 @@ public class DFSShiftGenerator : IShiftGenerator
                  where shiftHalfHr<=contest.Setting.ShiftHalfHrCount-arrHalfHr
                  select new {staff,shiftHalfHr})
         {
-            if(!contest.Msm.AssignStaff(date,ss.staff.Id,arrHalfHr,ss.shiftHalfHr,ss.staff.StaffType))
+            if(!contest.ShiftState.AssignStaff(date,ss.staff.Id,arrHalfHr,ss.shiftHalfHr,ss.staff.StaffType))
                 continue;
-            ShiftDFS(contest, date, arrHalfHr);
-            contest.Msm.UnassignStaff();
+            ShiftDfs(contest, date, arrHalfHr);
+            contest.ShiftState.UnassignStaff();
         }
     }
 
@@ -71,13 +84,13 @@ public class DFSShiftGenerator : IShiftGenerator
 
     private bool IsWorkerEnough(ShiftCreateContest contest, DateOnly date, int arrHalfHr)
     {
-        var currentWorkers = contest.Msm.GetWorkerCount(date, arrHalfHr);
+        var currentWorkers = contest.ShiftState.GetWorkerCount(date, arrHalfHr);
         var neededWorkers = contest.Setting.EveryHalfHrMinWorkers[arrHalfHr];
         return currentWorkers>=neededWorkers;
     }
 
-    public IMonthlyShiftModel GetShiftModel(DateOnly startDate, List<Staff> staffList, Setting setting)
+    public IShiftState GetShiftModel(DateOnly startDate, List<Staff> staffList, Setting setting)
     {
-        throw new NotImplementedException();
+        return new ShiftStateDfs(startDate,setting,staffList);
     }
 }

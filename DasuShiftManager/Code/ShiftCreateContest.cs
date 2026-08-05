@@ -1,5 +1,5 @@
 ﻿using DasuShiftManager.Code.Entities;
-using DasuShiftManager.Code.Models;
+using DasuShiftManager.Code.Shift;
 
 namespace DasuShiftManager.Code;
 
@@ -9,18 +9,18 @@ public class ShiftCreateContest
     public Setting Setting { get; init; }
     public Dictionary<DateOnly, List<int>> VacationData { get; init; }
     public List<Staff> StaffList { get; init; }
-    public IMonthlyShiftModel Msm { get; init; }
+    public IShiftState ShiftState { get; init; }
     public int IdCount { get; set; }
     public int MinShiftHalfHr { get; init; }
 
     public ShiftCreateContest(Setting setting,
-        Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IMonthlyShiftModel msm,DateOnly startDate)
+        Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState,DateOnly startDate)
     {
         StartDate = startDate;
         Setting= setting;
         VacationData = vacationData;
         StaffList = staffList;
-        Msm = msm;
+        ShiftState = shiftState;
         if(setting.ShiftHalfHrType==null||setting.ShiftHalfHrType.Count==0)
             throw new InvalidOperationException("ShiftHalfHrType is null or empty");
         MinShiftHalfHr = setting.ShiftHalfHrType.Min();
@@ -43,7 +43,7 @@ public class ShiftCreateContest
             ? [.. staffUnfixed.Where(staff => offStaffIds.Contains(staff.Id))]
             : staffUnfixed;
         //排除當日已排班員工
-        return [.. onWorkStaff.Where(staff => !Msm.IsStaffAlreadyAssigned(date, staff.Id))];
+        return [.. onWorkStaff.Where(staff => !ShiftState.IsStaffAlreadyAssigned(date, staff.Id))];
     }
 }
 

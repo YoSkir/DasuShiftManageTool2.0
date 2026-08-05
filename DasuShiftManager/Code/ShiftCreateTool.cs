@@ -1,7 +1,7 @@
 ﻿using DasuShiftManager.Code.Data;
 using DasuShiftManager.Code.Entities;
 using DasuShiftManager.Code.GenerateTool;
-using DasuShiftManager.Code.Models;
+using DasuShiftManager.Code.Shift;
 using Microsoft.EntityFrameworkCore;
 
 namespace DasuShiftManager.Code;
