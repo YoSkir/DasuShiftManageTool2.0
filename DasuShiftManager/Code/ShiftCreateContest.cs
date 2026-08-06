@@ -29,11 +29,17 @@ public class ShiftCreateContest
             throw new InvalidOperationException("EveryHalfHrMinWorkers is not equal to half hr count");
     }
 
+    /**
+     * 回傳最終結果 todo 目前尚不確定要回傳什麼
+     */
     public ShiftCreateResult GenerateResult()
     {
-        return new ShiftCreateResult(IdCount);
+        return new ShiftCreateResult();
     }
 
+    /**
+     * 用於遞迴排班時，依照當下State回傳可排員工列表
+     */
     public List<Staff> GetAvailableStaffs(DateOnly date)
     {
         var offStaffIds = VacationData.GetValueOrDefault(date);
@@ -49,21 +55,26 @@ public class ShiftCreateContest
             //排除當日已排班員工
             where !ShiftState.IsStaffAlreadyAssigned(date, staff.Id)
             //排除不符合每周放假天數員工
-            where !NotMatchMinDayOff(date, staff.Id)
+            where MatchMinDayOff(date, staff.Id)
             select staff
         ];
     }
 
-    private bool NotMatchMinDayOff(DateOnly date, int staffId)
+    /**
+     * 檢查員工在該日期時 當周是否已符合最低排假限制
+     */
+    private bool MatchMinDayOff(DateOnly date, int staffId)
     {
-        //todo 這裡要用迴圈依照每周最低假日從週日往回判斷每天是否符合
-        //每周檢查是否符合一周兩天假
-        return date.DayOfWeek == DayOfWeek.Sunday &&
-               ShiftState.GetVacationsOfCurrentWeek(staffId, date) < Setting.MinWeekRestDays;
+        //每周檢查是否符合一周假天數 基本上台灣勞基法是一周兩天 未來可能三天 所以目前直接寫死兩天判斷
+        return date.DayOfWeek switch
+        {
+            DayOfWeek.Saturday => ShiftState.GetVacationsOfCurrentWeek(staffId, date) >= 1,
+            DayOfWeek.Sunday => ShiftState.GetVacationsOfCurrentWeek(staffId, date) >= 2,
+            _ => true
+        };
     }
 }
 
-public class ShiftCreateResult(int resultCount)
+public class ShiftCreateResult
 {
-    public int ResultCount { get; init; } = resultCount;
 }

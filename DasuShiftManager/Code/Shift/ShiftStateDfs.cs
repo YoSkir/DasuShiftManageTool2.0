@@ -96,7 +96,7 @@ public class ShiftStateDfs :IShiftState
         }
     }
 
-    public int GetWorkerCount(DateOnly date, int arrHalfHr)
+    public int GetArrHalfHrAssignedStaffCount(DateOnly date, int arrHalfHr)
     {
         return _getDailyHHSC(date)[arrHalfHr];
     }

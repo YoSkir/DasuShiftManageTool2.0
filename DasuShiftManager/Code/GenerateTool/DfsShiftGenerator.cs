@@ -87,7 +87,7 @@ public class DfsShiftGenerator : IShiftGenerator
 
     private bool IsWorkerEnough(ShiftCreateContest contest, DateOnly date, int arrHalfHr)
     {
-        var currentWorkers = contest.ShiftState.GetWorkerCount(date, arrHalfHr);
+        var currentWorkers = contest.ShiftState.GetArrHalfHrAssignedStaffCount(date, arrHalfHr);
         var neededWorkers = contest.Setting.EveryHalfHrMinWorkers[arrHalfHr];
         return currentWorkers>=neededWorkers;
     }
