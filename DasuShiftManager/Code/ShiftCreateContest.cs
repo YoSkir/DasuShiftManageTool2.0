@@ -14,18 +14,18 @@ public class ShiftCreateContest
     public int MinShiftHalfHr { get; init; }
 
     public ShiftCreateContest(Setting setting,
-        Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState,DateOnly startDate)
+        Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState, DateOnly startDate)
     {
         StartDate = startDate;
-        Setting= setting;
+        Setting = setting;
         VacationData = vacationData;
         StaffList = staffList;
         ShiftState = shiftState;
-        if(setting.ShiftHalfHrType==null||setting.ShiftHalfHrType.Count==0)
+        if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)
             throw new InvalidOperationException("ShiftHalfHrType is null or empty");
         MinShiftHalfHr = setting.ShiftHalfHrType.Min();
         IdCount = 0;
-        if(setting.EveryHalfHrMinWorkers.Length!=setting.ShiftHalfHrCount)
+        if (setting.EveryHalfHrMinWorkers.Length != setting.ShiftHalfHrCount)
             throw new InvalidOperationException("EveryHalfHrMinWorkers is not equal to half hr count");
     }
 
@@ -33,17 +33,33 @@ public class ShiftCreateContest
     {
         return new ShiftCreateResult(IdCount);
     }
-    
+
     public List<Staff> GetAvailableStaffs(DateOnly date)
     {
-        //排除固定班別員工
-        var staffUnfixed = StaffList.Where(staff => !Setting.FixedShiftStaff.ContainsKey(staff.Id)).ToList();
-        //排除排假員工
-        var onWorkStaff=VacationData.TryGetValue(date, out var offStaffIds)
-            ? [.. staffUnfixed.Where(staff => offStaffIds.Contains(staff.Id))]
-            : staffUnfixed;
-        //排除當日已排班員工
-        return [.. onWorkStaff.Where(staff => !ShiftState.IsStaffAlreadyAssigned(date, staff.Id))];
+        var offStaffIds = VacationData.GetValueOrDefault(date);
+        return
+        [
+            .. from staff in StaffList
+            //排除固定班別員工
+            where !Setting.FixedShiftStaff.ContainsKey(staff.Id)
+            //排除排假員工
+            where offStaffIds == null || !offStaffIds.Contains(staff.Id)
+            //排除連上天數已到上限員工
+            where ShiftState.GetChainWorkDays(staff.Id) < Setting.MaxChainWorkDays
+            //排除當日已排班員工
+            where !ShiftState.IsStaffAlreadyAssigned(date, staff.Id)
+            //排除不符合每周放假天數員工
+            where !NotMatchMinDayOff(date, staff.Id)
+            select staff
+        ];
+    }
+
+    private bool NotMatchMinDayOff(DateOnly date, int staffId)
+    {
+        //todo 這裡要用迴圈依照每周最低假日從週日往回判斷每天是否符合
+        //每周檢查是否符合一周兩天假
+        return date.DayOfWeek == DayOfWeek.Sunday &&
+               ShiftState.GetVacationsOfCurrentWeek(staffId, date) < Setting.MinWeekRestDays;
     }
 }
 

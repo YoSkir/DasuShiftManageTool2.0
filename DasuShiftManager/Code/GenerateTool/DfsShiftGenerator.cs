@@ -48,7 +48,6 @@ public class DfsShiftGenerator : IShiftGenerator
         //存結果條件
         if (date >= contest.StartDate.AddMonths(1))
         {
-            //完成存入資料庫
             SaveResult(contest);
             return;
         }
@@ -60,6 +59,7 @@ public class DfsShiftGenerator : IShiftGenerator
             {
                 arrHalfHr = 0;
                 date.AddDays(1);
+                //這裡不順便補上沒排班人員的假日 是因為會擾亂遞迴歷史紀錄
             }
             ShiftDfs(contest, date, arrHalfHr);
             return;
@@ -79,6 +79,9 @@ public class DfsShiftGenerator : IShiftGenerator
 
     private void SaveResult(ShiftCreateContest contest)
     {
+        //檢察總時數
+        //檢察總假日
+        //分配最佳結果
         contest.IdCount++;
     }
 

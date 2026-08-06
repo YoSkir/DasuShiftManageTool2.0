@@ -9,5 +9,7 @@ public interface IShiftState
     int GetWorkerCount(DateOnly date, int arrHalfHr);
     void UnassignStaff();
     bool IsStaffAlreadyAssigned(DateOnly date, int staffId);
+    int GetChainWorkDays(int staffId);
+    int GetVacationsOfCurrentWeek(int staffId, DateOnly date);
     //todo 生成結果的函示
 }

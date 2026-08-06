@@ -46,7 +46,6 @@ public class ShiftStateDfs :IShiftState
 
     public bool AssignStaff(DateOnly date, int staffId, int startArrHalfHr, int workHalfHrs, StaffType staffType)
     {
-        //班別是否會溢出已在遞迴處檢查 因為還有固定班別 所以這裡可以考慮溢出不管 直接排到底 或是再做一次溢出檢查
         try
         {
             _getStaffShift(staffId).Assigned(date,startArrHalfHr,workHalfHrs);
@@ -68,6 +67,19 @@ public class ShiftStateDfs :IShiftState
         }
         _assignHistory.Push(new AssignMove(date,staffId));
         return true;
+    }
+
+    public int GetVacationsOfCurrentWeek(int staffId, DateOnly date)
+    {
+        var c = 0;
+        var shiftInfo = _getStaffShift(staffId);
+        for (var i = 1; i < 6; i++)
+        {
+            if (shiftInfo.IsDayOff(date))
+                c++;
+        }
+
+        return c;
     }
 
     public bool AssignStaffDayOff(DateOnly date, int staffId)
@@ -105,6 +117,11 @@ public class ShiftStateDfs :IShiftState
     {
         return _getStaffShift(staffId).IsAlreadyAssigned(date);
     }
+
+    public int GetChainWorkDays(int staffId)
+    {
+        return _getStaffShift(staffId).ChainWorkDays;
+    }
 }
 
 public class AssignMove(DateOnly date,int staffId)
@@ -116,6 +133,8 @@ public class AssignMove(DateOnly date,int staffId)
 public class StaffShift
 {
     private readonly Dictionary<DateOnly, ShiftInfo> _monthShift = new();
+    public int TotalWorkHalfHrs { get; set; }
+    public int ChainWorkDays { get; set; }
 
     public bool IsAlreadyAssigned(DateOnly date)
     {
@@ -127,6 +146,7 @@ public class StaffShift
         if(IsAlreadyAssigned(date))
             throw new InvalidOperationException($"Date {date.ToShortDateString()} is already assigned");
         _monthShift.Add(date,new ShiftInfo());
+        ChainWorkDays = 0;
     }
 
     public void Assigned(DateOnly date, int startHalfHr, int workHalfHrs)
@@ -134,13 +154,32 @@ public class StaffShift
         if(IsAlreadyAssigned(date))
             throw new InvalidOperationException($"Date {date.ToShortDateString()} is already assigned");
         _monthShift.Add(date,new ShiftInfo(startHalfHr,workHalfHrs));
+        var lastDayShift = _monthShift?[date.AddDays(-1)];
+        if (lastDayShift == null || lastDayShift.DayOff)
+            ChainWorkDays = 0;
+        ChainWorkDays++;
+        TotalWorkHalfHrs+=workHalfHrs;
     }
 
     public ShiftInfo Unassigned(DateOnly date)
     {
-        return !_monthShift.Remove(date, out var shiftInfo)
-            ? throw new InvalidOperationException(
-                $"Date {date.ToShortDateString()} is not assigned while trying unassign")
-            : shiftInfo;
+        if (!_monthShift.Remove(date, out var shiftInfo))
+        {
+            throw new InvalidOperationException($"Date {date.ToShortDateString()} is not assigned");
+        }
+
+        if (!shiftInfo.DayOff)
+        {
+            TotalWorkHalfHrs-=shiftInfo.WorkHalfHrs;
+            //這裡要注意 因為是遞迴呼叫總是最後一步才能這樣扣連續上班日
+            ChainWorkDays = Math.Min(0, ChainWorkDays - 1);
+        }
+        return shiftInfo;
+    }
+
+    public bool IsDayOff(DateOnly date)
+    {
+        //因為用於遞迴途中往回檢查一周放假天數 所以null也會算放假 故不適合往未來查
+        return !_monthShift.TryGetValue(date, out var shiftInfo) || shiftInfo.DayOff;
     }
 }
