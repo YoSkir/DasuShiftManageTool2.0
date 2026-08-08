@@ -1,6 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DasuShiftManager", "DasuShiftManager\DasuShiftManager.csproj", "{46895342-76BA-4C84-8751-90A99584D71A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DasuShiftManager.Blazor", "DasuShiftManager.Blazor\DasuShiftManager.Blazor.csproj", "{46895342-76BA-4C84-8751-90A99584D71A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DasuShiftManager.Core", "DasuShiftManager.Core\DasuShiftManager.Core.csproj", "{5E9111D3-4386-41FD-BDF6-E092CC5A6748}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DasuShiftManager.Server", "DasuShiftManager.Server\DasuShiftManager.Server.csproj", "{4E86532B-8EDB-42ED-84D7-4736E723AD14}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DasuShiftManager.Data", "DasuShiftManager.Data\DasuShiftManager.Data.csproj", "{9317D354-5392-49F0-8953-61DB48935A3B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +18,17 @@ Global
 		{46895342-76BA-4C84-8751-90A99584D71A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46895342-76BA-4C84-8751-90A99584D71A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46895342-76BA-4C84-8751-90A99584D71A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E9111D3-4386-41FD-BDF6-E092CC5A6748}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E9111D3-4386-41FD-BDF6-E092CC5A6748}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E9111D3-4386-41FD-BDF6-E092CC5A6748}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E9111D3-4386-41FD-BDF6-E092CC5A6748}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E86532B-8EDB-42ED-84D7-4736E723AD14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E86532B-8EDB-42ED-84D7-4736E723AD14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E86532B-8EDB-42ED-84D7-4736E723AD14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E86532B-8EDB-42ED-84D7-4736E723AD14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9317D354-5392-49F0-8953-61DB48935A3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9317D354-5392-49F0-8953-61DB48935A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9317D354-5392-49F0-8953-61DB48935A3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9317D354-5392-49F0-8953-61DB48935A3B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
