@@ -36,6 +36,8 @@ public class DfsShiftGenerator : IShiftGenerator
             {
                 var shift = fixedPair.Value?[weekday];
                 if(shift==null||shift.DayOff) continue;
+                //跳過排假
+                if (contest.ShiftState.IsStaffAlreadyAssigned(date, fixedPair.Key)) continue;
                 if(!contest.ShiftState.AssignStaff(date, fixedPair.Key, shift.StartHalfHr, shift.WorkHalfHrs, StaffType.Normal))
                     throw new InvalidOperationException($"Fixed shift assignment failed, staff id: {fixedPair.Key}");
             }
@@ -51,19 +53,6 @@ public class DfsShiftGenerator : IShiftGenerator
             SaveResult(contest);
             return;
         }
-        //時間推進條件
-        if (IsWorkerEnough(contest, date, arrHalfHr))
-        {
-            arrHalfHr++;
-            if (arrHalfHr >= contest.Setting.ShiftHalfHrCount)
-            {
-                arrHalfHr = 0;
-                date.AddDays(1);
-                //這裡不順便補上沒排班人員的假日 是因為會擾亂遞迴歷史紀錄
-            }
-            ShiftDfs(contest, date, arrHalfHr);
-            return;
-        }
         //嘗試排班
         foreach (var ss in from staff in contest.GetAvailableStaffs(date)
                  from shiftHalfHr in contest.Setting.ShiftHalfHrType
@@ -75,6 +64,12 @@ public class DfsShiftGenerator : IShiftGenerator
             ShiftDfs(contest, date, arrHalfHr);
             contest.ShiftState.UnassignStaff();
         }
+        //時間推進條件
+        if (!IsWorkerEnough(contest, date, arrHalfHr)) return;
+        //這裡不順便補上沒排班人員的假日 是因為會擾亂遞迴歷史紀錄
+        if (arrHalfHr+1 >= contest.Setting.ShiftHalfHrCount)
+            ShiftDfs(contest, date.AddDays(1), 0);
+        else ShiftDfs(contest, date, arrHalfHr+1);
     }
 
     private void SaveResult(ShiftCreateContest contest)
