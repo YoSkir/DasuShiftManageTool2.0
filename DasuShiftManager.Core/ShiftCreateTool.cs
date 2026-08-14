@@ -1,6 +1,8 @@
 ﻿using DasuShiftManager.Core.Data;
 using DasuShiftManager.Core.Entities;
 using DasuShiftManager.Core.GenerateTool;
+using DasuShiftManager.Core.GenerateTool.AssignTool;
+using DasuShiftManager.Core.GenerateTool.ResultSaver;
 
 namespace DasuShiftManager.Core;
 
@@ -18,8 +20,12 @@ public class ShiftCreateTool(DataGetter dataGetter)
         
         var currentDate = new DateOnly(year, month, setting.ShiftStartDay);
         var msm = generator.GetShiftModel(currentDate,staffList,setting);
-        var contest = new ShiftCreateContest(setting, vacationData, staffList, msm,currentDate);
-        generator.StartGenerate(contest);
+        
+        var assignTool = new EveryHalfHrAssignTool();
+        var resultSaver = new MultipleRankResultSaver();
+        
+        var contest = new ShiftCreateContext(setting, vacationData, staffList, msm,currentDate,resultSaver);
+        generator.StartGenerate(contest,assignTool);
         
         return contest.GenerateResult();
     }

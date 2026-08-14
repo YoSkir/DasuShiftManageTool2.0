@@ -1,90 +1,50 @@
 ﻿using DasuShiftManager.Core.Entities;
+using DasuShiftManager.Core.GenerateTool.AssignTool;
 using DasuShiftManager.Core.Shift;
 
 namespace DasuShiftManager.Core.GenerateTool;
 
 public class DfsShiftGenerator : IShiftGenerator
 {
-    public void StartGenerate(ShiftCreateContest contest)
+    public void StartGenerate(ShiftCreateContext context,IAssignTool assignTool)
     {
         //劃假排入
-        AssignDayOff(contest);
+        AssignDayOff(context);
         //固定班別排入
-        AssignFixedShiftStaff(contest);
+        AssignFixedShiftStaff(context);
         //遞迴排班
-        ShiftDfs(contest,contest.StartDate,0);
+        assignTool.ShiftDfs(context,context.StartDate,0);
+        //todo 如果結果為0 嘗試增加虛擬員工再次排班
     }
 
-    private void AssignDayOff(ShiftCreateContest contest)
+    private void AssignDayOff(ShiftCreateContext context)
     {
-        foreach (var dayOffData in from pair in contest.VacationData
+        foreach (var dayOffData in from pair in context.VacationData
                  let date=pair.Key
                  from id in pair.Value
                  select new {date,id})
         {
-            contest.ShiftState.AssignStaffDayOff(dayOffData.date,dayOffData.id);
+            context.ShiftState.AssignStaffDayOff(dayOffData.date,dayOffData.id);
         }
     }
 
-    private void AssignFixedShiftStaff(ShiftCreateContest contest)
+    private void AssignFixedShiftStaff(ShiftCreateContext context)
     {
-        var date = contest.StartDate;
-        while (date >= contest.StartDate.AddMonths(1))
+        var date = context.StartDate;
+        while (date >= context.StartDate.AddMonths(1))
         {
             var weekday = (int)date.DayOfWeek;
-            foreach (var fixedPair in contest.Setting.FixedShiftStaff)
+            foreach (var fixedPair in context.Setting.FixedShiftStaff)
             {
                 var shift = fixedPair.Value?[weekday];
                 if(shift==null||shift.DayOff) continue;
                 //跳過排假
-                if (contest.ShiftState.IsStaffAlreadyAssigned(date, fixedPair.Key)) continue;
-                if(!contest.ShiftState.AssignStaff(date, fixedPair.Key, shift.StartHalfHr, shift.WorkHalfHrs, StaffType.Normal))
+                if (context.ShiftState.IsStaffAlreadyAssigned(date, fixedPair.Key)) continue;
+                if(!context.ShiftState.AssignStaff(date, fixedPair.Key, shift.StartHalfHr, shift.WorkHalfHrs, StaffType.Normal))
                     throw new InvalidOperationException($"Fixed shift assignment failed, staff id: {fixedPair.Key}");
             }
             date.AddDays(1);
         }
-    }
-
-    private void ShiftDfs(ShiftCreateContest contest, DateOnly date, int arrHalfHr)
-    {
-        //存結果條件
-        if (date >= contest.StartDate.AddMonths(1))
-        {
-            SaveResult(contest);
-            return;
-        }
-        //嘗試排班
-        foreach (var ss in from staff in contest.GetAvailableStaffs(date)
-                 from shiftHalfHr in contest.Setting.ShiftHalfHrType
-                 where shiftHalfHr<=contest.Setting.ShiftHalfHrCount-arrHalfHr
-                 select new {staff,shiftHalfHr})
-        {
-            if(!contest.ShiftState.AssignStaff(date,ss.staff.Id,arrHalfHr,ss.shiftHalfHr,ss.staff.StaffType))
-                continue;
-            ShiftDfs(contest, date, arrHalfHr);
-            contest.ShiftState.UnassignStaff();
-        }
-        //時間推進條件
-        if (!IsWorkerEnough(contest, date, arrHalfHr)) return;
-        //這裡不順便補上沒排班人員的假日 是因為會擾亂遞迴歷史紀錄
-        if (arrHalfHr+1 >= contest.Setting.ShiftHalfHrCount)
-            ShiftDfs(contest, date.AddDays(1), 0);
-        else ShiftDfs(contest, date, arrHalfHr+1);
-    }
-
-    private void SaveResult(ShiftCreateContest contest)
-    {
-        //檢察總時數
-        //檢察總假日
-        //分配最佳結果
-        contest.IdCount++;
-    }
-
-    private bool IsWorkerEnough(ShiftCreateContest contest, DateOnly date, int arrHalfHr)
-    {
-        var currentWorkers = contest.ShiftState.GetArrHalfHrAssignedStaffCount(date, arrHalfHr);
-        var neededWorkers = contest.Setting.EveryHalfHrMinWorkers[arrHalfHr];
-        return currentWorkers>=neededWorkers;
     }
 
     public IShiftState GetShiftModel(DateOnly startDate, List<Staff> staffList, Setting setting)

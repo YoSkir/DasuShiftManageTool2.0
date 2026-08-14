@@ -1,9 +1,10 @@
 ﻿using DasuShiftManager.Core.Entities;
+using DasuShiftManager.Core.GenerateTool.ResultSaver;
 using DasuShiftManager.Core.Shift;
 
 namespace DasuShiftManager.Core;
 
-public class ShiftCreateContest
+public class ShiftCreateContext
 {
     public DateOnly StartDate { get; init; }
     public Setting Setting { get; init; }
@@ -12,15 +13,17 @@ public class ShiftCreateContest
     public IShiftState ShiftState { get; init; }
     public int IdCount { get; set; }
     public int MinShiftHalfHr { get; init; }
+    public IResultSaver ResultSaver { get; init; }
 
-    public ShiftCreateContest(Setting setting,
-        Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState, DateOnly startDate)
+    public ShiftCreateContext(Setting setting,
+        Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState, DateOnly startDate,IResultSaver resultSaver)
     {
         StartDate = startDate;
         Setting = setting;
         VacationData = vacationData;
         StaffList = staffList;
         ShiftState = shiftState;
+        ResultSaver = resultSaver;
         if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)
             throw new InvalidOperationException("ShiftHalfHrType is null or empty");
         MinShiftHalfHr = setting.ShiftHalfHrType.Min();
@@ -58,6 +61,13 @@ public class ShiftCreateContest
             where MatchMinDayOff(date, staff.Id)
             select staff
         ];
+    }
+
+    public bool IsWorkerEnough(DateOnly date, int arrHalfHr)
+    {
+        var currentWorkers = ShiftState.GetArrHalfHrAssignedStaffCount(date, arrHalfHr);
+        var neededWorkers = Setting.EveryHalfHrMinWorkers[arrHalfHr];
+        return currentWorkers>=neededWorkers;
     }
 
     /**
