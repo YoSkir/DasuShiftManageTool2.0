@@ -13,8 +13,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Code\" />
       <Folder Include="wwwroot\lib\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DasuShiftManager.Shared\DasuShiftManager.Shared.csproj" />
     </ItemGroup>
 
 </Project>

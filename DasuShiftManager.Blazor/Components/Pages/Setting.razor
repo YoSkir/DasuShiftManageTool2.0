@@ -1,0 +1,37 @@
+﻿@page "/setting"
+@using DasuShiftManager.Server.Entity.Setting
+
+<MudText Typo="Typo.h4" Class="mb-4">設定</MudText>
+
+@if (isLoading)
+{
+    <MudProgressLinear Indeterminate="true" Class="my-7"></MudProgressLinear>
+}
+else
+{
+    <MudNumericField @bind-Value="_shiftStartDay" Label="每月班表起始日期" Min="1" Max="28"></MudNumericField>
+}
+
+@code
+{
+    private bool isLoading = true;
+    private SettingDto _setting;
+    private int _shiftStartDay;
+
+    protected override Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+        }
+        catch (Exception e)
+        {
+
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -16,6 +16,10 @@ Blazor
 - 建立blazor頁面顏色設定、layout
 - 修改Icon、把專案建立時預設css、layout、navbar刪除、改為MudBlazor
 - 修正App.razor的設定、刪除bootstrap檔案
-
 ### 下次開發預計:
 - 思考建立主頁內容、navbar內容、setting頁面
+
+## 2026-08-15 16:40
+- 前端設定頁面建立
+- 建立專案.Shared 用來放前後端溝通dto
+### 下次開發: 補上設定頁面其他設定值
