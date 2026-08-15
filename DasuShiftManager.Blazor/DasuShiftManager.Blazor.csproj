@@ -14,6 +14,7 @@
 
     <ItemGroup>
       <Folder Include="Code\" />
+      <Folder Include="wwwroot\lib\" />
     </ItemGroup>
 
 </Project>

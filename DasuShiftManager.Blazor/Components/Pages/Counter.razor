@@ -1,31 +1,10 @@
 ﻿@page "/counter"
 
-<PageTitle>Counter</PageTitle>
+<MudMainContent>
+    
+</MudMainContent>
+<MudText Typo="Typo.h4" Class="mb-4">大樹排班系統</MudText>
 
-<h1>Counter</h1>
-
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">+</button>
-<button class="btn btn-primary" @onclick="DecrementCount">-</button>
-<button class="btn btn-primary" @onclick="SetZero">Set0</button>
-
-@code {
-    private int currentCount = 0;
-
-    private void IncrementCount()
-    {
-        currentCount++;
-    }
-
-    private void DecrementCount()
-    {
-        currentCount--;
-    }
-
-    private void SetZero()
-    {
-        currentCount = 0;
-    }
-
-}
+<MudPaper Class="pa-4">
+    <MudText>這裡使用 MudPaper，在深色模式下會自動變成深灰色卡片！</MudText>
+</MudPaper>
