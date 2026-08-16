@@ -23,3 +23,8 @@ Blazor
 - 前端設定頁面建立
 - 建立專案.Shared 用來放前後端溝通dto
 ### 下次開發: 補上設定頁面其他設定值
+
+## 2026-08-16 17:55
+-設定頁開關班時間選擇器元件建立
+-SettingDto的Annotation檢查、自訂檢查開關班時間是否一樣的Annotation
+-修正部分Core的Bug

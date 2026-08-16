@@ -9,21 +9,26 @@
 }
 else
 {
-    <MudNumericField @bind-Value="_shiftStartDay" Label="每月班表起始日期" Min="1" Max="28"></MudNumericField>
+    <MudNumericField @bind-Value="_setting.ShiftStartDay" Label="每月班表起始日期" Min="1" Max="28" 
+                     For="() => _setting.ShiftStartDay"></MudNumericField>
+    <MudTimePicker Label="開班時間" @bind-Time ="_setting.ShiftStartTime" MinuteSelectionStep="30" TimeFormat="HH:mm"
+                   Editable="false" Variant="Variant.Outlined" For="@(() => _setting.ShiftStartTime)"/>
+    <MudTimePicker Label="關班時間" @bind-Time="_setting.ShiftEndTime" MinuteSelectionStep="30" TimeFormat="HH:mm"
+                   Editable="false" Variant="Variant.Outlined" For="@(() => _setting.ShiftEndTime)"/>
 }
 
 @code
 {
     private bool isLoading = true;
     private SettingDto _setting;
-    private int _shiftStartDay;
 
-    protected override Task OnInitializedAsync()
+
+    protected override async Task OnInitializedAsync()
     {
         try
         {
             isLoading = true;
-
+            _setting = new SettingDto();
         }
         catch (Exception e)
         {
