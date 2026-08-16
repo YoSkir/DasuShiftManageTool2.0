@@ -43,7 +43,7 @@ public class DfsShiftGenerator : IShiftGenerator
                 if(!context.ShiftState.AssignStaff(date, fixedPair.Key, shift.StartHalfHr, shift.WorkHalfHrs, StaffType.Normal))
                     throw new InvalidOperationException($"Fixed shift assignment failed, staff id: {fixedPair.Key}");
             }
-            date.AddDays(1);
+            date=date.AddDays(1);
         }
     }
 

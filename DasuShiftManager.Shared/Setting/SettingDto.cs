@@ -1,10 +1,18 @@
-﻿namespace DasuShiftManager.Server.Entity.Setting;
+﻿using System.ComponentModel.DataAnnotations;
+using DasuShiftManager.Shared.DataAnnotations;
+
+namespace DasuShiftManager.Server.Entity.Setting;
 
 public class SettingDto
 {
+    [Required(ErrorMessage = "請輸日班表開始日期")]
+    [Range(1,28,ErrorMessage = "請輸入合法日期(1~28)")]
     public int ShiftStartDay { get; set; }
-    public int ShiftStartTime { get; set; }
-    public int ShiftEndTime { get; set; }
+    [Required]
+    public TimeSpan? ShiftStartTime { get; set; }
+    [Required]
+    [NotEqualTo(nameof(ShiftStartTime),ErrorMessage = "開關班時間不可相同")]
+    public TimeSpan? ShiftEndTime { get; set; }
     public int FirstBreakActiveWorkHrs { get; set; }
     public int FirstBreakDurationHalfHrs {get; set;}
     public int SecondBreakActiveWorkHrs { get; set; }

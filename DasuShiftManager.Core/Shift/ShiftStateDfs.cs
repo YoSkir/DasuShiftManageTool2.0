@@ -12,7 +12,7 @@ public class ShiftStateDfs :IShiftState
     private readonly Dictionary<DateOnly, int[]> _monthHalfHrStaffCounts = new();
     private int[] _getDailyHHSC(DateOnly date)
     {
-        if (_monthHalfHrStaffCounts.TryGetValue(date, out var hhsc) || hhsc == null)
+        if (!_monthHalfHrStaffCounts.TryGetValue(date, out var hhsc))
         {
             throw new InvalidOperationException($"Date {date.ToShortDateString()} half hour staff counts not found");
         }
@@ -22,7 +22,7 @@ public class ShiftStateDfs :IShiftState
     private readonly Dictionary<int,StaffShift> _staffShifts = new();
     private StaffShift _getStaffShift(int staffId)
     {
-        if (_staffShifts.TryGetValue(staffId, out var staffShift)||staffShift==null)
+        if (!_staffShifts.TryGetValue(staffId, out var staffShift))
         {
             throw new InvalidOperationException($"Staff id: {staffId} shift not found");
         }
@@ -40,7 +40,7 @@ public class ShiftStateDfs :IShiftState
         while (firstDay <= lastDay)
         {
             _monthHalfHrStaffCounts[firstDay] = new int[setting.ShiftHalfHrCount];
-            firstDay.AddDays(1);
+            firstDay=firstDay.AddDays(1);
         }
     }
 
@@ -75,7 +75,7 @@ public class ShiftStateDfs :IShiftState
         var shiftInfo = _getStaffShift(staffId);
         for (var i = 1; i < 6; i++)
         {
-            if (shiftInfo.IsDayOff(date))
+            if (shiftInfo.IsDayOff(date.AddDays(-i)))
                 c++;
         }
 
@@ -172,7 +172,7 @@ public class StaffShift
         {
             TotalWorkHalfHrs-=shiftInfo.WorkHalfHrs;
             //這裡要注意 因為是遞迴呼叫總是最後一步才能這樣扣連續上班日
-            ChainWorkDays = Math.Min(0, ChainWorkDays - 1);
+            ChainWorkDays = Math.Max(0, ChainWorkDays - 1);
         }
         return shiftInfo;
     }
