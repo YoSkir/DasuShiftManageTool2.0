@@ -3,8 +3,14 @@ using DasuShiftManager.Core.Entities;
 
 namespace DasuShiftManager.Core.Init;
 
+/// <summary>
+/// 初始化系統預設排班設定的服務入口。
+/// </summary>
 public class InitService
 {
+    /// <summary>
+    /// 建立預設排班設定，供後續生成流程使用。
+    /// </summary>
     public void Init()
     {
         var setting = new Setting{

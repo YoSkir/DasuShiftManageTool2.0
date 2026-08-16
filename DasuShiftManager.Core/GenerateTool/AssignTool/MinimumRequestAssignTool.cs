@@ -3,8 +3,17 @@
 /**
  * 只排最低限度需求員工的排法
  */
+/// <summary>
+/// 只嘗試滿足最低人力需求的排班策略，偏向快速收斂而非全面枚舉。
+/// </summary>
 public class MinimumRequestAssignTool:IAssignTool
 {
+    /// <summary>
+    /// 在指定日期與半小時點，先確認最低需求是否滿足，否則才新增員工班表。
+    /// </summary>
+    /// <param name="context">目前排班上下文。</param>
+    /// <param name="date">當前日期。</param>
+    /// <param name="arrHalfHr">當前半小時索引。</param>
     public void ShiftDfs(ShiftCreateContext context, DateOnly date, int arrHalfHr)
     {
         //存結果條件

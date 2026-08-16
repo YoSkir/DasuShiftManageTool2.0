@@ -4,6 +4,9 @@ using DasuShiftManager.Core.Shift;
 
 namespace DasuShiftManager.Core;
 
+/// <summary>
+/// 保存排班過程中需要共用的上下文資料與查詢邏輯。
+/// </summary>
 public class ShiftCreateContext
 {
     public DateOnly StartDate { get; init; }
@@ -15,76 +18,101 @@ public class ShiftCreateContext
     public int MinShiftHalfHr { get; init; }
     public IResultSaver ResultSaver { get; init; }
 
+    /// <summary>
+    /// 建立排班上下文。
+    /// </summary>
+    /// <param name="setting">排班設定。</param>
+    /// <param name="vacationData">休假資料。</param>
+    /// <param name="staffList">員工清單。</param>
+    /// <param name="shiftState">當前月份的排班狀態。</param>
+    /// <param name="startDate">排班起始日期。</param>
+    /// <param name="resultSaver">結果輸出器。</param>
+    /// <exception cref="InvalidOperationException">設定資料不合法時拋出。</exception>
     public ShiftCreateContext(Setting setting,
-        Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState, DateOnly startDate,IResultSaver resultSaver)
+       Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState, DateOnly startDate,IResultSaver resultSaver)
     {
-        StartDate = startDate;
-        Setting = setting;
-        VacationData = vacationData;
-        StaffList = staffList;
-        ShiftState = shiftState;
-        ResultSaver = resultSaver;
-        if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)
-            throw new InvalidOperationException("ShiftHalfHrType is null or empty");
-        MinShiftHalfHr = setting.ShiftHalfHrType.Min();
-        IdCount = 0;
-        if (setting.EveryHalfHrMinWorkers.Length != setting.ShiftHalfHrCount)
-            throw new InvalidOperationException("EveryHalfHrMinWorkers is not equal to half hr count");
+       StartDate = startDate;
+       Setting = setting;
+       VacationData = vacationData;
+       StaffList = staffList;
+       ShiftState = shiftState;
+       ResultSaver = resultSaver;
+       if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)
+           throw new InvalidOperationException("ShiftHalfHrType is null or empty");
+       MinShiftHalfHr = setting.ShiftHalfHrType.Min();
+       IdCount = 0;
+       if (setting.EveryHalfHrMinWorkers.Length != setting.ShiftHalfHrCount)
+           throw new InvalidOperationException("EveryHalfHrMinWorkers is not equal to half hr count");
     }
 
-    /**
-     * 回傳最終結果 todo 目前尚不確定要回傳什麼
-     */
+    /// <summary>
+    /// 生成目前排班流程的最終結果物件。
+    /// </summary>
+    /// <returns>目前已生成的排班結果。</returns>
     public ShiftCreateResult GenerateResult()
     {
-        return new ShiftCreateResult();
+       return new ShiftCreateResult();
     }
 
-    /**
-     * 用於遞迴排班時，依照當下State回傳可排員工列表
-     */
+    /// <summary>
+    /// 依照目前狀態，回傳某日可供排班的員工列表。
+    /// </summary>
+    /// <param name="date">要判斷是否可排的日期。</param>
+    /// <returns>符合條件且仍可被安排的員工集合。</returns>
     public List<Staff> GetAvailableStaffs(DateOnly date)
     {
-        var offStaffIds = VacationData.GetValueOrDefault(date);
-        return
-        [
-            .. from staff in StaffList
-            //排除固定班別員工
-            where !Setting.FixedShiftStaff.ContainsKey(staff.Id)
-            //排除排假員工
-            where offStaffIds == null || !offStaffIds.Contains(staff.Id)
-            //排除連上天數已到上限員工
-            where ShiftState.GetChainWorkDays(staff.Id) < Setting.MaxChainWorkDays
-            //排除當日已排班員工
-            where !ShiftState.IsStaffAlreadyAssigned(date, staff.Id)
-            //排除不符合每周放假天數員工
-            where MatchMinDayOff(date, staff.Id)
-            select staff
-        ];
+       var offStaffIds = VacationData.GetValueOrDefault(date);
+       return
+       [
+           .. from staff in StaffList
+           //排除固定班別員工
+           where !Setting.FixedShiftStaff.ContainsKey(staff.Id)
+           //排除排假員工
+           where offStaffIds == null || !offStaffIds.Contains(staff.Id)
+           //排除連上天數已到上限員工
+           where ShiftState.GetChainWorkDays(staff.Id) < Setting.MaxChainWorkDays
+           //排除當日已排班員工
+           where !ShiftState.IsStaffAlreadyAssigned(date, staff.Id)
+           //排除不符合每周放假天數員工
+           where MatchMinDayOff(date, staff.Id)
+           select staff
+       ];
     }
 
+    /// <summary>
+    /// 判斷指定時段是否已達到最低所需工作人數。
+    /// </summary>
+    /// <param name="date">日期。</param>
+    /// <param name="arrHalfHr">半小時索引。</param>
+    /// <returns>若已達到當前最低人力需求則為 <see langword="true"/>。</returns>
     public bool IsWorkerEnough(DateOnly date, int arrHalfHr)
     {
-        var currentWorkers = ShiftState.GetArrHalfHrAssignedStaffCount(date, arrHalfHr);
-        var neededWorkers = Setting.EveryHalfHrMinWorkers[arrHalfHr];
-        return currentWorkers>=neededWorkers;
+       var currentWorkers = ShiftState.GetArrHalfHrAssignedStaffCount(date, arrHalfHr);
+       var neededWorkers = Setting.EveryHalfHrMinWorkers[arrHalfHr];
+       return currentWorkers>=neededWorkers;
     }
 
-    /**
-     * 檢查員工在該日期時 當周是否已符合最低排假限制
-     */
+    /// <summary>
+    /// 檢查指定員工在當周是否已滿足最低排假限制。
+    /// </summary>
+    /// <param name="date">要判斷的日期。</param>
+    /// <param name="staffId">員工識別碼。</param>
+    /// <returns>若符合最少休假天數規則則為 <see langword="true"/>。</returns>
     private bool MatchMinDayOff(DateOnly date, int staffId)
     {
-        //每周檢查是否符合一周假天數 基本上台灣勞基法是一周兩天 未來可能三天 所以目前直接寫死兩天判斷
-        return date.DayOfWeek switch
-        {
-            DayOfWeek.Saturday => ShiftState.GetVacationsOfCurrentWeek(staffId, date) >= 1,
-            DayOfWeek.Sunday => ShiftState.GetVacationsOfCurrentWeek(staffId, date) >= 2,
-            _ => true
-        };
+       //每周檢查是否符合一周假天數 基本上台灣勞基法是一周兩天 未來可能三天 所以目前直接寫死兩天判斷
+       return date.DayOfWeek switch
+       {
+           DayOfWeek.Saturday => ShiftState.GetVacationsOfCurrentWeek(staffId, date) >= 1,
+           DayOfWeek.Sunday => ShiftState.GetVacationsOfCurrentWeek(staffId, date) >= 2,
+           _ => true
+       };
     }
 }
 
+/// <summary>
+/// 代表排班生成流程的最終輸出物件。
+/// </summary>
 public class ShiftCreateResult
 {
 }
