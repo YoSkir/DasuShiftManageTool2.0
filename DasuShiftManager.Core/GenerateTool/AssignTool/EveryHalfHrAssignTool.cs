@@ -3,8 +3,17 @@
 /**
  * 每個半時都嘗試排的排法
  */
+/// <summary>
+/// 以「每個半小時都嘗試排班」的方式執行深度優先搜尋。
+/// </summary>
 public class EveryHalfHrAssignTool : IAssignTool
 {
+    /// <summary>
+    /// 遞迴嘗試將員工安插到指定日期與半小時點，直到完成本月排班或找到候選結果。
+    /// </summary>
+    /// <param name="context">目前排班上下文。</param>
+    /// <param name="date">當前處理日期。</param>
+    /// <param name="arrHalfHr">當前處理的半小時索引。</param>
     public void ShiftDfs(ShiftCreateContext context, DateOnly date, int arrHalfHr)
     {
         //存結果條件

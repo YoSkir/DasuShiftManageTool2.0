@@ -6,8 +6,19 @@ using DasuShiftManager.Core.GenerateTool.ResultSaver;
 
 namespace DasuShiftManager.Core;
 
-public class ShiftCreateTool(DataGetter dataGetter)
+/// <summary>
+/// 排班生成入口，負責依據設定、員工與休假資料建立整個月份的排班流程。
+/// </summary>
+public class ShiftCreateTool(IDataGetter dataGetter)
 {
+    /// <summary>
+    /// 產生指定年月的排班結果。
+    /// </summary>
+    /// <param name="year">排班年份。</param>
+    /// <param name="month">排班月份。</param>
+    /// <param name="generator">用於啟動排班演算法的生成器。</param>
+    /// <returns>本月份的排班結果。</returns>
+    /// <exception cref="Exception">設定不存在、員工資料為空等情況時拋出。</exception>
     public ShiftCreateResult GenerateThisMonthShift(int year,int month,IShiftGenerator generator)
     {
         var setting = dataGetter.GetSetting();
@@ -30,7 +41,12 @@ public class ShiftCreateTool(DataGetter dataGetter)
         return contest.GenerateResult();
     }
 
-
+    /// <summary>
+    /// 根據工時長度計算員工應該休息的半小時數。
+    /// </summary>
+    /// <param name="workHalfHours">目前已工作的半小時數。</param>
+    /// <param name="setting">排班設定。</param>
+    /// <returns>休息時段的半小時長度。</returns>
     private static int GetRestHalfHour(int workHalfHours, Setting setting)
     {
         if(workHalfHours>=setting.SecondBreakActiveWorkHalfHrs) return setting.SecondBreakDurationHalfHrs;

@@ -28,3 +28,7 @@ Blazor
 -設定頁開關班時間選擇器元件建立
 -SettingDto的Annotation檢查、自訂檢查開關班時間是否一樣的Annotation
 -修正部分Core的Bug
+
+## 2026-08-22 18:00
+- 抽象畫Data Getter
+### 下次開發: 補上設定頁面其他設定值、實作測試資料獲取工具
