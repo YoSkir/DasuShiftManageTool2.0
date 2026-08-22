@@ -9,7 +9,7 @@ namespace DasuShiftManager.Core;
 /// <summary>
 /// 排班生成入口，負責依據設定、員工與休假資料建立整個月份的排班流程。
 /// </summary>
-public class ShiftCreateTool(DataGetter dataGetter)
+public class ShiftCreateTool(IDataGetter dataGetter)
 {
     /// <summary>
     /// 產生指定年月的排班結果。

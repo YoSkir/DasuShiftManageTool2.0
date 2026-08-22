@@ -5,7 +5,7 @@ namespace DasuShiftManager.Core.Data;
 /// <summary>
 /// 提供排班資料的讀取入口，將外部資料來源與排班邏輯解耦。
 /// </summary>
-public class DataGetter
+public class DataGetter:IDataGetter
 {
     /// <summary>
     /// 取得每一天的休假員工清單。
