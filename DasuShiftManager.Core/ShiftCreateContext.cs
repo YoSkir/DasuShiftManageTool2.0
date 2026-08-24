@@ -10,6 +10,7 @@ namespace DasuShiftManager.Core;
 public class ShiftCreateContext
 {
     public DateOnly StartDate { get; init; }
+    public DateOnly EndDate { get; init; }
     public Setting Setting { get; init; }
     public Dictionary<DateOnly, List<int>> VacationData { get; init; }
     public List<Staff> StaffList { get; init; }
@@ -32,6 +33,7 @@ public class ShiftCreateContext
        Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState, DateOnly startDate,IResultSaver resultSaver)
     {
        StartDate = startDate;
+       EndDate=startDate.AddMonths(1).AddDays(-1);
        Setting = setting;
        VacationData = vacationData;
        StaffList = staffList;
@@ -107,6 +109,16 @@ public class ShiftCreateContext
            DayOfWeek.Sunday => ShiftState.GetVacationsOfCurrentWeek(staffId, date) >= 2,
            _ => true
        };
+    }
+
+    public StaffType GetStaffType(int staffId)
+    {
+        var staff = StaffList.Find(staff => staff.Id == staffId);
+
+        if (staff != null) return staff.StaffType;
+
+        Console.WriteLine($"Cant find staff {staffId}'s type");
+        return StaffType.Normal;
     }
 }
 

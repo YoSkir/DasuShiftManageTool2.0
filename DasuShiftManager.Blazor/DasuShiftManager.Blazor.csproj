@@ -9,15 +9,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MudBlazor" Version="9.8.0" />
+        <PackageReference Include="MudBlazor" Version="9.8.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\lib\" />
+        <Folder Include="wwwroot\lib\"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\DasuShiftManager.Shared\DasuShiftManager.Shared.csproj" />
+        <ProjectReference Include="..\DasuShiftManager.Shared\DasuShiftManager.Shared.csproj"/>
+        <ProjectReference Include="..\DasuShiftManager.Core\DasuShiftManager.Core.csproj"/>
     </ItemGroup>
 
 </Project>

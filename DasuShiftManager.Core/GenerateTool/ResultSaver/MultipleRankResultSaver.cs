@@ -15,5 +15,6 @@ public class MultipleRankResultSaver:IResultSaver
         //檢察總假日
         //分配最佳結果
         context.IdCount++;
+        Console.WriteLine($"班表完成 {context.IdCount}");
     }
 }

@@ -60,7 +60,7 @@ public class ShiftStateDfs :IShiftState
         }
 
         var lastDay = firstDay.AddMonths(1);
-        while (firstDay <= lastDay)
+        while (firstDay < lastDay)
         {
             _monthHalfHrStaffCounts[firstDay] = new int[setting.ShiftHalfHrCount];
             firstDay=firstDay.AddDays(1);
@@ -162,7 +162,7 @@ public class ShiftStateDfs :IShiftState
         var hhsc = _getDailyHHSC(lastMove.Date);
         for (var i = 0; i < shiftInfo.WorkHalfHrs; i++)
         {
-            hhsc[shiftInfo.StartHalfHr + i]--;
+            hhsc[shiftInfo.StartArrHalfHr + i]--;
         }
     }
 
@@ -224,7 +224,7 @@ public class StaffShift
     public void AssignedDayOff(DateOnly date) 
     {
         if(IsAlreadyAssigned(date))
-            throw new InvalidOperationException($"Date {date.ToShortDateString()} is already assigned");
+            throw new InvalidOperationException($"While assign day off, date {date.ToShortDateString()} is already assigned");
         _monthShift.Add(date,new ShiftInfo());
         ChainWorkDays = 0;
     }
@@ -233,19 +233,17 @@ public class StaffShift
     /// 為指定日期記錄正常工作班別。
     /// </summary>
     /// <param name="date">班表日期。</param>
-    /// <param name="startHalfHr">開始的半小時索引。</param>
+    /// <param name="startArrHalfHr">開始的半小時索引。</param>
     /// <param name="workHalfHrs">工作時段長度（半小時）。</param>
     /// <exception cref="InvalidOperationException">若該日期已安排過則拋出。</exception>
-    public void Assigned(DateOnly date, int startHalfHr, int workHalfHrs)
+    public void Assigned(DateOnly date, int startArrHalfHr, int workHalfHrs)
     {
         if(IsAlreadyAssigned(date))
-            throw new InvalidOperationException($"Date {date.ToShortDateString()} is already assigned");
-        _monthShift.Add(date,new ShiftInfo(startHalfHr,workHalfHrs));
-        var lastDayShift = _monthShift?[date.AddDays(-1)];
-        if (lastDayShift == null || lastDayShift.DayOff)
-            ChainWorkDays = 0;
+            throw new InvalidOperationException($"While assign work,date {date.ToShortDateString()} is already assigned");
+        if (!_monthShift.TryGetValue(date.AddDays(-1), out var shiftInfo)||shiftInfo.DayOff) ChainWorkDays = 0;
         ChainWorkDays++;
         TotalWorkHalfHrs+=workHalfHrs;
+        _monthShift.Add(date,new ShiftInfo(startArrHalfHr,workHalfHrs));
     }
 
     /// <summary>

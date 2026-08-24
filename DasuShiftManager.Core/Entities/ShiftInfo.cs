@@ -3,13 +3,13 @@
 public class ShiftInfo
 {
     public bool DayOff;
-    public int StartHalfHr;
+    public int StartArrHalfHr;
     public int WorkHalfHrs;
 
-    public ShiftInfo(int startHalfHr, int workHalfHrs)
+    public ShiftInfo(int startArrHalfHr, int workHalfHrs)
     {
         DayOff=false;
-        StartHalfHr = startHalfHr;
+        StartArrHalfHr = startArrHalfHr;
         WorkHalfHrs = workHalfHrs;
     }
 

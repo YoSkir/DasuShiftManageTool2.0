@@ -13,6 +13,7 @@ public class SettingDto
     [Required]
     [NotEqualTo(nameof(ShiftStartTime),ErrorMessage = "開關班時間不可相同")]
     public TimeSpan? ShiftEndTime { get; set; }
+    [Required]
     public int FirstBreakActiveWorkHrs { get; set; }
     public int FirstBreakDurationHalfHrs {get; set;}
     public int SecondBreakActiveWorkHrs { get; set; }

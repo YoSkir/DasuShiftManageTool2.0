@@ -47,7 +47,7 @@ public class DfsShiftGenerator : IShiftGenerator
     private void AssignFixedShiftStaff(ShiftCreateContext context)
     {
         var date = context.StartDate;
-        while (date >= context.StartDate.AddMonths(1))
+        while (date <=context.EndDate)
         {
             var weekday = (int)date.DayOfWeek;
             foreach (var fixedPair in context.Setting.FixedShiftStaff)
@@ -56,7 +56,7 @@ public class DfsShiftGenerator : IShiftGenerator
                 if(shift==null||shift.DayOff) continue;
                 //跳過排假
                 if (context.ShiftState.IsStaffAlreadyAssigned(date, fixedPair.Key)) continue;
-                if(!context.ShiftState.AssignStaff(date, fixedPair.Key, shift.StartHalfHr, shift.WorkHalfHrs, StaffType.Normal))
+                if(!context.ShiftState.AssignStaff(date, fixedPair.Key, shift.StartArrHalfHr, shift.WorkHalfHrs, context.GetStaffType(fixedPair.Key)))
                     throw new InvalidOperationException($"Fixed shift assignment failed, staff id: {fixedPair.Key}");
             }
             date=date.AddDays(1);

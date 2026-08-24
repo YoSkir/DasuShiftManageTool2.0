@@ -17,7 +17,7 @@ public class EveryHalfHrAssignTool : IAssignTool
     public void ShiftDfs(ShiftCreateContext context, DateOnly date, int arrHalfHr)
     {
         //存結果條件
-        if (date >= context.StartDate.AddMonths(1))
+        if (date > context.EndDate)
         {
             context.ResultSaver.SaveResult(context);
             return;
