@@ -33,7 +33,9 @@ public class ShiftCreateContext
        Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState, DateOnly startDate,IResultSaver resultSaver)
     {
        StartDate = startDate;
-       EndDate=startDate.AddMonths(1).AddDays(-1);
+       // EndDate=startDate.AddMonths(1).AddDays(-1);
+       //for test
+       EndDate = startDate.AddDays(6);
        Setting = setting;
        VacationData = vacationData;
        StaffList = staffList;
@@ -119,6 +121,17 @@ public class ShiftCreateContext
 
         Console.WriteLine($"Cant find staff {staffId}'s type");
         return StaffType.Normal;
+    }
+
+    public int NextUndoneArrHalfHr(DateOnly date,int currentIndex)
+    {
+        for (var i = currentIndex; i < Setting.ShiftHalfHrCount; i++)
+        {
+            var currentWorkers = ShiftState.GetArrHalfHrAssignedStaffCount(date, i);
+            var neededWorkers = Setting.EveryHalfHrMinWorkers[i];
+            if (neededWorkers > currentWorkers) return i;
+        }
+        return Setting.ShiftHalfHrCount;
     }
 }
 
