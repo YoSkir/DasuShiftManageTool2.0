@@ -22,8 +22,12 @@ public class EveryHalfHrAssignTool : IAssignTool
             context.ResultSaver.SaveResult(context);
             return;
         }
-        if (arrHalfHr+1 >= context.Setting.ShiftHalfHrCount)
+
+        if (arrHalfHr >= context.Setting.ShiftHalfHrCount)
+        {
             ShiftDfs(context, date.AddDays(1), 0);
+            return;
+        }
         //嘗試排班
         //todo 測試一下 目前排法是所有半時都嘗試 如果太耗效能，要改成先排最低需求，再依不夠工時另跑補工時遞迴
         foreach (var ss in from staff in context.GetAvailableStaffs(date)
