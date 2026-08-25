@@ -32,7 +32,7 @@ public class ShiftCreateTool(IDataGetter dataGetter)
         var currentDate = new DateOnly(year, month, setting.ShiftStartDay);
         var msm = generator.GetShiftModel(currentDate,staffList,setting);
         
-        var assignTool = new EveryHalfHrAssignTool();
+        var assignTool = new EveryPossibleAssignTool();
         var resultSaver = new MultipleRankResultSaver();
         
         var contest = new ShiftCreateContext(setting, vacationData, staffList, msm,currentDate,resultSaver);

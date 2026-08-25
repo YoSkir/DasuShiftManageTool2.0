@@ -6,7 +6,7 @@
 /// <summary>
 /// 以「每個半小時都嘗試排班」的方式執行深度優先搜尋。
 /// </summary>
-public class EveryHalfHrAssignTool : IAssignTool
+public class EveryPossibleAssignTool : IAssignTool
 {
     /// <summary>
     /// 遞迴嘗試將員工安插到指定日期與半小時點，直到完成本月排班或找到候選結果。
@@ -25,7 +25,7 @@ public class EveryHalfHrAssignTool : IAssignTool
 
         if (arrHalfHr >= context.Setting.ShiftHalfHrCount)
         {
-            ShiftDfs(context, date.AddDays(1), 0);
+            ShiftDfs(context, date.AddDays(1), context.NextUndoneArrHalfHr(date,0));
             return;
         }
         //嘗試排班
@@ -37,9 +37,7 @@ public class EveryHalfHrAssignTool : IAssignTool
         {
             if(!context.ShiftState.AssignStaff(date,ss.staff.Id,arrHalfHr,ss.shiftHalfHr,ss.staff.StaffType))
                 continue;
-            if(context.IsWorkerEnough(date, arrHalfHr))
-                ShiftDfs(context, date, arrHalfHr+1);
-            ShiftDfs(context, date, arrHalfHr);
+            ShiftDfs(context, date, context.NextUndoneArrHalfHr(date,arrHalfHr));
             context.ShiftState.UnassignStaff();
         }
         //這裡不順便補上沒排班人員的假日 是因為會擾亂遞迴歷史紀錄

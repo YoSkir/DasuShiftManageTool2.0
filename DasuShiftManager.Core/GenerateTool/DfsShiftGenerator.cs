@@ -21,7 +21,7 @@ public class DfsShiftGenerator : IShiftGenerator
         //固定班別排入
         AssignFixedShiftStaff(context);
         //遞迴排班
-        assignTool.ShiftDfs(context,context.StartDate,0);
+        assignTool.ShiftDfs(context,context.StartDate,context.NextUndoneArrHalfHr(context.StartDate,0));
         //todo 如果結果為0 嘗試增加虛擬員工再次排班
     }
 
