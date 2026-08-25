@@ -1,5 +1,6 @@
 ﻿using DasuShiftManager.Core.Entities;
 using DasuShiftManager.Core.GenerateTool.AssignTool;
+using DasuShiftManager.Core.GenerateTool.ResultSaver;
 using DasuShiftManager.Core.Shift;
 
 namespace DasuShiftManager.Core.GenerateTool;
@@ -21,6 +22,8 @@ public class DfsShiftGenerator : IShiftGenerator
         //固定班別排入
         AssignFixedShiftStaff(context);
         //遞迴排班
+        context.ResultSaver = new MultipleRankResultSaver();
+        context.EndDate = context.StartDate.AddMonths(1).AddDays(-1);
         assignTool.ShiftDfs(context,context.StartDate,context.NextUndoneArrHalfHr(context.StartDate,0));
         //todo 如果結果為0 嘗試增加虛擬員工再次排班
     }

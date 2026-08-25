@@ -16,7 +16,7 @@ public class Tests
     {
         var dataGetter = new TestDataGetter();
         var main = new ShiftCreateTool(dataGetter);
-        var generator = new DfsShiftGenerator();
+        var generator = new DcDfsShiftGenerator();
         var res=main.GenerateThisMonthShift(2026,9,generator);
         Assert.That(res.ResultCount, Is.GreaterThan(0));
         Console.WriteLine($"結果: {res.ResultCount}");

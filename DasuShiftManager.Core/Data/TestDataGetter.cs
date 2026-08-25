@@ -35,8 +35,8 @@ public class TestDataGetter:IDataGetter
         };
         //藥師特殊規則
         var dayOff = new ShiftInfo();
-        var work = new ShiftInfo(0,26);
-        res.FixedShiftStaff[2] = [dayOff,work,work,dayOff,work,work,dayOff];
+        ShiftInfo? blank = null;
+        res.FixedShiftStaff[2] = [dayOff,blank,blank,dayOff,blank,blank,dayOff];
         
         return res;
     }

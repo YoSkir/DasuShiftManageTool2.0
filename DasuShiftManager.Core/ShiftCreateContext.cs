@@ -9,15 +9,14 @@ namespace DasuShiftManager.Core;
 /// </summary>
 public class ShiftCreateContext
 {
-    public DateOnly StartDate { get; init; }
-    public DateOnly EndDate { get; init; }
-    public Setting Setting { get; init; }
-    public Dictionary<DateOnly, List<int>> VacationData { get; init; }
-    public List<Staff> StaffList { get; init; }
-    public IShiftState ShiftState { get; init; }
+    public DateOnly StartDate { get; }
+    public DateOnly EndDate { get; set; }
+    public Setting Setting { get;  }
+    public Dictionary<DateOnly, List<int>> VacationData { get;  }
+    private List<Staff> StaffList { get;  }
+    public IShiftState ShiftState { get;  }
     public int IdCount { get; set; }
-    public int MinShiftHalfHr { get; init; }
-    public IResultSaver ResultSaver { get; init; }
+    public IResultSaver ResultSaver { get; set; }
 
     /// <summary>
     /// 建立排班上下文。
@@ -27,23 +26,17 @@ public class ShiftCreateContext
     /// <param name="staffList">員工清單。</param>
     /// <param name="shiftState">當前月份的排班狀態。</param>
     /// <param name="startDate">排班起始日期。</param>
-    /// <param name="resultSaver">結果輸出器。</param>
     /// <exception cref="InvalidOperationException">設定資料不合法時拋出。</exception>
     public ShiftCreateContext(Setting setting,
-       Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState, DateOnly startDate,IResultSaver resultSaver)
+       Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState, DateOnly startDate)
     {
        StartDate = startDate;
-       // EndDate=startDate.AddMonths(1).AddDays(-1);
-       //for test
-       EndDate = startDate.AddDays(6);
        Setting = setting;
        VacationData = vacationData;
        StaffList = staffList;
-       ShiftState = shiftState;
-       ResultSaver = resultSaver;
+       ShiftState = shiftState; 
        if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)
            throw new InvalidOperationException("ShiftHalfHrType is null or empty");
-       MinShiftHalfHr = setting.ShiftHalfHrType.Min();
        IdCount = 0;
        if (setting.EveryHalfHrMinWorkers.Length != setting.ShiftHalfHrCount)
            throw new InvalidOperationException("EveryHalfHrMinWorkers is not equal to half hr count");
@@ -141,4 +134,9 @@ public class ShiftCreateContext
 public class ShiftCreateResult
 {
     public int ResultCount { get; set; } = 0;
+}
+
+public class PruningStatement
+{
+    
 }

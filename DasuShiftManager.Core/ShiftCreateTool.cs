@@ -33,9 +33,7 @@ public class ShiftCreateTool(IDataGetter dataGetter)
         var msm = generator.GetShiftModel(currentDate,staffList,setting);
         
         var assignTool = new EveryPossibleAssignTool();
-        var resultSaver = new MultipleRankResultSaver();
-        
-        var contest = new ShiftCreateContext(setting, vacationData, staffList, msm,currentDate,resultSaver);
+        var contest = new ShiftCreateContext(setting, vacationData, staffList, msm,currentDate);
         generator.StartGenerate(contest,assignTool);
         
         return contest.GenerateResult();
