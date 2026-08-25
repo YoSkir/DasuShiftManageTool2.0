@@ -53,7 +53,7 @@ public class ShiftCreateContext
     /// <returns>目前已生成的排班結果。</returns>
     public ShiftCreateResult GenerateResult()
     {
-       return new ShiftCreateResult();
+        return new ShiftCreateResult() { ResultCount = IdCount };
     }
 
     /// <summary>
@@ -127,4 +127,5 @@ public class ShiftCreateContext
 /// </summary>
 public class ShiftCreateResult
 {
+    public int ResultCount { get; set; } = 0;
 }
