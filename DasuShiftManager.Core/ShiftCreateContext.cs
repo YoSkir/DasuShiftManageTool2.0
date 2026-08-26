@@ -9,14 +9,15 @@ namespace DasuShiftManager.Core;
 /// </summary>
 public class ShiftCreateContext
 {
-    public DateOnly StartDate { get; }
+    public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
     public Setting Setting { get;  }
     public Dictionary<DateOnly, List<int>> VacationData { get;  }
-    private List<Staff> StaffList { get;  }
-    public IShiftState ShiftState { get;  }
+    public List<Staff> StaffList { get;  }
+    public IShiftState ShiftState { get; set; }
     public int IdCount { get; set; }
     public IResultSaver ResultSaver { get; set; }
+    public PruningStatement? PruningStatement{get; set;}
 
     /// <summary>
     /// 建立排班上下文。
@@ -24,17 +25,15 @@ public class ShiftCreateContext
     /// <param name="setting">排班設定。</param>
     /// <param name="vacationData">休假資料。</param>
     /// <param name="staffList">員工清單。</param>
-    /// <param name="shiftState">當前月份的排班狀態。</param>
     /// <param name="startDate">排班起始日期。</param>
     /// <exception cref="InvalidOperationException">設定資料不合法時拋出。</exception>
     public ShiftCreateContext(Setting setting,
-       Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, IShiftState shiftState, DateOnly startDate)
+       Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, DateOnly startDate)
     {
        StartDate = startDate;
        Setting = setting;
        VacationData = vacationData;
        StaffList = staffList;
-       ShiftState = shiftState; 
        if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)
            throw new InvalidOperationException("ShiftHalfHrType is null or empty");
        IdCount = 0;
@@ -116,7 +115,7 @@ public class ShiftCreateContext
         return StaffType.Normal;
     }
 
-    public int NextUndoneArrHalfHr(DateOnly date,int currentIndex)
+    public int NextUndoneArrHalfHr(DateOnly date,int currentIndex = 0)
     {
         for (var i = currentIndex; i < Setting.ShiftHalfHrCount; i++)
         {
@@ -125,6 +124,26 @@ public class ShiftCreateContext
             if (neededWorkers > currentWorkers) return i;
         }
         return Setting.ShiftHalfHrCount;
+    }
+
+    public bool TooMuchDayOff(int id, DateOnly date)
+    {
+        if(PruningStatement==null) return false;
+        return ShiftState.GetVacationsOfCurrentWeek(id, date) >= PruningStatement.MaxDayyOff;
+    }
+
+    public bool WorkHrGapTooBigPerWeek(DateOnly date)
+    {
+        if(PruningStatement==null) return false;
+        var maxWh = int.MinValue;
+        var minWh = int.MaxValue;
+        foreach (var staff in StaffList)
+        {
+            var workHalfHrs = ShiftState.GetWorkHalfHrs(staff.Id, date, 8);
+            maxWh = Math.Max(maxWh,workHalfHrs);
+            minWh = Math.Min(minWh, workHalfHrs);
+        }
+        return maxWh - minWh > PruningStatement.MaxWorkHalfHrGap;
     }
 }
 
@@ -138,5 +157,8 @@ public class ShiftCreateResult
 
 public class PruningStatement
 {
+    public int MaxDayyOff { get; init; }
+    public int MaxWorkHalfHrGap { get; init; }
+    
     
 }

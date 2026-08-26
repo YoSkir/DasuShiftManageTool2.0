@@ -30,10 +30,8 @@ public class ShiftCreateTool(IDataGetter dataGetter)
         //todo 檢查員公數如果不合理(目前想到: 只有一個員工，或員工人數等於少於每日最高可能人數) 則建議使用者招人 並補上最低所需虛擬員工
         
         var currentDate = new DateOnly(year, month, setting.ShiftStartDay);
-        var msm = generator.GetShiftModel(currentDate,staffList,setting);
-        
         var assignTool = new EveryPossibleAssignTool();
-        var contest = new ShiftCreateContext(setting, vacationData, staffList, msm,currentDate);
+        var contest = new ShiftCreateContext(setting, vacationData, staffList, currentDate);
         generator.StartGenerate(contest,assignTool);
         
         return contest.GenerateResult();

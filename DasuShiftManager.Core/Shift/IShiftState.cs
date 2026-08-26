@@ -61,4 +61,6 @@ public interface IShiftState
     /// <param name="date">用來決定週期範圍的日期。</param>
     /// <returns>該週內已排假次數。</returns>
     int GetVacationsOfCurrentWeek(int staffId, DateOnly date);
+
+    int GetWorkHalfHrs(int staffId, DateOnly date, int countDays);
 }

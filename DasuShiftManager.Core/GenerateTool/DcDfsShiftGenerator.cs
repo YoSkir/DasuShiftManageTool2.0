@@ -15,14 +15,17 @@ public class DcDfsShiftGenerator : IShiftGenerator
         context.ResultSaver = new DcDfsResultSaver();
         //找到周一的日期
         var startDate = context.StartDate.AddDays(DayOfWeek.Monday - context.StartDate.DayOfWeek);
+        context.StartDate=startDate;
         //設定搜尋七天
         context.EndDate = startDate.AddDays(6);
-        assignTool.ShiftDfs(context, startDate, context.NextUndoneArrHalfHr(context.StartDate, 0));
-    }
-
-    public IShiftState GetShiftModel(DateOnly startDate, List<Staff> staffList, Setting setting)
-    {
-        return new ShiftStateDfs(startDate, setting, staffList);
+        context.PruningStatement=  new PruningStatement()
+        {
+            MaxDayyOff = 4,
+            MaxWorkHalfHrGap = 52
+        };
+        //設定遞迴容器
+        context.ShiftState = new ShiftStateDfs(startDate, context.EndDate, context.Setting, context.StaffList);
+        assignTool.ShiftDfs(context, startDate, context.NextUndoneArrHalfHr(startDate));
     }
 
     private void AssignFixedShiftStaff(ShiftCreateContext context)

@@ -52,15 +52,14 @@ public class ShiftStateDfs :IShiftState
     /// <param name="firstDay">當月起始日期。</param>
     /// <param name="setting">排班設定。</param>
     /// <param name="staffs">員工清單。</param>
-    public ShiftStateDfs(DateOnly firstDay, Setting setting, List<Staff> staffs)
+    public ShiftStateDfs(DateOnly firstDay,DateOnly lastDay, Setting setting, List<Staff> staffs)
     {
         foreach (var staff in staffs)
         {
             _staffShifts[staff.Id] = new StaffShift();
         }
 
-        var lastDay = firstDay.AddMonths(1);
-        while (firstDay < lastDay)
+        while (firstDay <= lastDay)
         {
             _monthHalfHrStaffCounts[firstDay] = new int[setting.ShiftHalfHrCount];
             firstDay=firstDay.AddDays(1);
@@ -111,13 +110,33 @@ public class ShiftStateDfs :IShiftState
     {
         var c = 0;
         var shiftInfo = _getStaffShift(staffId);
-        for (var i = 1; i < 6; i++)
+        var getDate = date;
+
+        if (getDate.DayOfWeek == DayOfWeek.Sunday)
         {
-            if (shiftInfo.IsDayOff(date.AddDays(-i)))
-                c++;
+            if (shiftInfo.IsDayOff(getDate)) c++;
+            getDate=getDate.AddDays(-1);
+        }
+        
+        while (getDate.DayOfWeek != DayOfWeek.Sunday)
+        {
+            if (shiftInfo.IsDayOff(getDate)) c++;
+            getDate=getDate.AddDays(-1);
         }
 
         return c;
+    }
+
+    public int GetWorkHalfHrs(int staffId, DateOnly date, int countDays)
+    {
+        var workHalfHrs = 0;
+        for (var i = 0; i < countDays; i++)
+        {
+            var shiftInfo = _getStaffShift(staffId);
+            workHalfHrs += shiftInfo.GetWorkHalfHrs(date.AddDays(-i));
+        }
+
+        return workHalfHrs;
     }
 
     /// <summary>
@@ -277,5 +296,10 @@ public class StaffShift
     {
         //因為用於遞迴途中往回檢查一周放假天數 所以null也會算放假 故不適合往未來查
         return !_monthShift.TryGetValue(date, out var shiftInfo) || shiftInfo.DayOff;
+    }
+
+    public int GetWorkHalfHrs(DateOnly date)
+    {
+        return _monthShift.TryGetValue(date, out var shiftInfo) ? shiftInfo.WorkHalfHrs : 0;
     }
 }

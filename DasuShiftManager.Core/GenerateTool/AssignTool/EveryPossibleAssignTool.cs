@@ -16,6 +16,13 @@ public class EveryPossibleAssignTool : IAssignTool
     /// <param name="arrHalfHr">當前處理的半小時索引。</param>
     public void ShiftDfs(ShiftCreateContext context, DateOnly date, int arrHalfHr)
     {
+        //剪枝: 每週最大最小工時差距大於設定值
+        // if (date.DayOfWeek == DayOfWeek.Monday && !date.Equals(context.StartDate))
+        // {
+        //     if(context.WorkHrGapTooBigPerWeek(date))
+        //         return;
+        // }
+        
         //存結果條件
         if (date > context.EndDate)
         {
@@ -25,16 +32,17 @@ public class EveryPossibleAssignTool : IAssignTool
 
         if (arrHalfHr >= context.Setting.ShiftHalfHrCount)
         {
-            ShiftDfs(context, date.AddDays(1), context.NextUndoneArrHalfHr(date,0));
+            ShiftDfs(context, date.AddDays(1), context.NextUndoneArrHalfHr(date));
             return;
         }
         //嘗試排班
-        //todo 測試一下 目前排法是所有半時都嘗試 如果太耗效能，要改成先排最低需求，再依不夠工時另跑補工時遞迴
         foreach (var ss in from staff in context.GetAvailableStaffs(date)
                  from shiftHalfHr in context.Setting.ShiftHalfHrType
                  where shiftHalfHr<=context.Setting.ShiftHalfHrCount-arrHalfHr
                  select new {staff,shiftHalfHr})
         {
+            //剪枝:檢查是否達到最大排休日
+            // if(context.TooMuchDayOff(ss.staff.Id,date)) return;
             if(!context.ShiftState.AssignStaff(date,ss.staff.Id,arrHalfHr,ss.shiftHalfHr,ss.staff.StaffType))
                 continue;
             ShiftDfs(context, date, context.NextUndoneArrHalfHr(date,arrHalfHr));
