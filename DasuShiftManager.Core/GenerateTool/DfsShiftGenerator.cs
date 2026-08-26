@@ -24,11 +24,6 @@ public class DfsShiftGenerator : IShiftGenerator
         //遞迴排班
         context.ResultSaver = new MultipleRankResultSaver();
         context.EndDate = context.StartDate.AddMonths(1).AddDays(-1);
-        context.PruningStatement = new PruningStatement()
-        {
-            MaxDayyOff = 4,
-            MaxWorkHalfHrGap = 52
-        };
         context.ShiftState = new ShiftStateDfs(context.StartDate,context.EndDate,context.Setting,context.StaffList);
         assignTool.ShiftDfs(context,context.StartDate,context.NextUndoneArrHalfHr(context.StartDate));
         //todo 如果結果為0 嘗試增加虛擬員工再次排班

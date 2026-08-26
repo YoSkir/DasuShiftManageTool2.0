@@ -9,50 +9,14 @@ public class DcDfsShiftGenerator : IShiftGenerator
 {
     public void StartGenerate(ShiftCreateContext context, IAssignTool assignTool)
     {
-        //固定班別排入
-        // AssignFixedShiftStaff(context);
-        //分治法 排出乾淨的一周所有可能後儲存
+        //分治法 排出一天所有可能後儲存
         context.ResultSaver = new DcDfsResultSaver();
-        //找到周一的日期
-        var startDate = context.StartDate.AddDays(DayOfWeek.Monday - context.StartDate.DayOfWeek);
-        context.StartDate=startDate;
-        //設定搜尋七天
-        context.EndDate = startDate.AddDays(1);
-        context.PruningStatement=  new PruningStatement()
-        {
-            MaxDayyOff = 4,
-            MaxWorkHalfHrGap = 52
-        };
-        //設定遞迴容器
-        context.ShiftState = new ShiftStateDfs(startDate, context.EndDate, context.Setting, context.StaffList);
-        assignTool.ShiftDfs(context, startDate, context.NextUndoneArrHalfHr(startDate));
-    }
-
-    private void AssignFixedShiftStaff(ShiftCreateContext context)
-    {
-        var date = context.StartDate;
-        while (date <= context.EndDate)
-        {
-            var weekday = (int)date.DayOfWeek;
-            foreach (var fixedPair in context.Setting.FixedShiftStaff)
-            {
-                var shift = fixedPair.Value?[weekday];
-                if (shift == null) continue;
-                if (shift.DayOff)
-                {
-                    if (!context.ShiftState.AssignStaffDayOff(date, fixedPair.Key))
-                        throw new InvalidOperationException($"Fixed dayoff assignment failed, staff id: {fixedPair.Key}");
-                    continue;
-                }
-
-                //跳過排假
-                if (context.ShiftState.IsStaffAlreadyAssigned(date, fixedPair.Key)) continue;
-                if (!context.ShiftState.AssignStaff(date, fixedPair.Key, shift.StartArrHalfHr, shift.WorkHalfHrs,
-                        context.GetStaffType(fixedPair.Key)))
-                    throw new InvalidOperationException($"Fixed shift assignment failed, staff id: {fixedPair.Key}");
-            }
-
-            date = date.AddDays(1);
-        }
+        context.EndDate = context.StartDate.AddDays(1);
+        context.ShiftState = new ShiftStateDfs(context.StartDate, context.EndDate, context.Setting, context.StaffList);
+        assignTool.ShiftDfs(context, context.StartDate, context.NextUndoneArrHalfHr(context.StartDate));
+        //每日班表組合
+        //每天篩選: 符合劃假、符合指定班、符合最高連上天數、週日時檢查符合最低放假天數、最後符合最低時數、指定早或晚、藥師需求
+        //額外篩選(如果有就套用 沒有就不套): 不要連續全班 不要晚接早 不要連續放超過3天 偏好排班
+        //多結果時使用亂數(或是之前的排行法找當下複數最優解)
     }
 }

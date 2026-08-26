@@ -17,7 +17,9 @@ public class ShiftCreateContext
     public IShiftState ShiftState { get; set; }
     public int IdCount { get; set; }
     public IResultSaver ResultSaver { get; set; }
-    public PruningStatement? PruningStatement{get; set;}
+    //單日所有可能
+    public List<ShiftResult> DailyShift { get;} =[];
+
 
     /// <summary>
     /// 建立排班上下文。
@@ -126,24 +128,9 @@ public class ShiftCreateContext
         return Setting.ShiftHalfHrCount;
     }
 
-    public bool TooMuchDayOff(int id, DateOnly date)
+    public ShiftInfo GetShiftCopy(int staffId,DateOnly date)
     {
-        if(PruningStatement==null) return false;
-        return ShiftState.GetVacationsOfCurrentWeek(id, date) >= PruningStatement.MaxDayyOff;
-    }
-
-    public bool WorkHrGapTooBigPerWeek(DateOnly date)
-    {
-        if(PruningStatement==null) return false;
-        var maxWh = int.MinValue;
-        var minWh = int.MaxValue;
-        foreach (var staff in StaffList)
-        {
-            var workHalfHrs = ShiftState.GetWorkHalfHrs(staff.Id, date, 8);
-            maxWh = Math.Max(maxWh,workHalfHrs);
-            minWh = Math.Min(minWh, workHalfHrs);
-        }
-        return maxWh - minWh > PruningStatement.MaxWorkHalfHrGap;
+        return ShiftState.GetShiftCopy(staffId,date);
     }
 }
 
@@ -153,12 +140,4 @@ public class ShiftCreateContext
 public class ShiftCreateResult
 {
     public int ResultCount { get; set; } = 0;
-}
-
-public class PruningStatement
-{
-    public int MaxDayyOff { get; init; }
-    public int MaxWorkHalfHrGap { get; init; }
-    
-    
 }

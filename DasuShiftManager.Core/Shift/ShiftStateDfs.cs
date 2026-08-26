@@ -139,6 +139,11 @@ public class ShiftStateDfs :IShiftState
         return workHalfHrs;
     }
 
+    public ShiftInfo GetShiftCopy(int staffId, DateOnly date)
+    {
+        return _getStaffShift(staffId).GetShiftCopy(date);
+    }
+
     /// <summary>
     /// 將指定員工標記為休假。
     /// </summary>
@@ -301,5 +306,12 @@ public class StaffShift
     public int GetWorkHalfHrs(DateOnly date)
     {
         return _monthShift.TryGetValue(date, out var shiftInfo) ? shiftInfo.WorkHalfHrs : 0;
+    }
+
+    public ShiftInfo GetShiftCopy(DateOnly date)
+    {
+        if (!_monthShift.TryGetValue(date, out var shiftInfo))
+            return new ShiftInfo();
+        return new ShiftInfo(){DayOff = shiftInfo.DayOff,StartArrHalfHr = shiftInfo.StartArrHalfHr,WorkHalfHrs = shiftInfo.WorkHalfHrs};
     }
 }

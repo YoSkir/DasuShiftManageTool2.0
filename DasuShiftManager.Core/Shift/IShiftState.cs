@@ -63,4 +63,5 @@ public interface IShiftState
     int GetVacationsOfCurrentWeek(int staffId, DateOnly date);
 
     int GetWorkHalfHrs(int staffId, DateOnly date, int countDays);
+    ShiftInfo GetShiftCopy(int staffId, DateOnly date);
 }
