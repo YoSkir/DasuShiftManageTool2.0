@@ -10,14 +10,14 @@ public class DcDfsShiftGenerator : IShiftGenerator
     public void StartGenerate(ShiftCreateContext context, IAssignTool assignTool)
     {
         //固定班別排入
-        AssignFixedShiftStaff(context);
+        // AssignFixedShiftStaff(context);
         //分治法 排出乾淨的一周所有可能後儲存
         context.ResultSaver = new DcDfsResultSaver();
         //找到周一的日期
         var startDate = context.StartDate.AddDays(DayOfWeek.Monday - context.StartDate.DayOfWeek);
         context.StartDate=startDate;
         //設定搜尋七天
-        context.EndDate = startDate.AddDays(6);
+        context.EndDate = startDate.AddDays(1);
         context.PruningStatement=  new PruningStatement()
         {
             MaxDayyOff = 4,

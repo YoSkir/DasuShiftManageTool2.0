@@ -16,13 +16,6 @@ public class EveryPossibleAssignTool : IAssignTool
     /// <param name="arrHalfHr">當前處理的半小時索引。</param>
     public void ShiftDfs(ShiftCreateContext context, DateOnly date, int arrHalfHr)
     {
-        //剪枝: 每週最大最小工時差距大於設定值
-        // if (date.DayOfWeek == DayOfWeek.Monday && !date.Equals(context.StartDate))
-        // {
-        //     if(context.WorkHrGapTooBigPerWeek(date))
-        //         return;
-        // }
-        
         //存結果條件
         if (date > context.EndDate)
         {
@@ -41,8 +34,6 @@ public class EveryPossibleAssignTool : IAssignTool
                  where shiftHalfHr<=context.Setting.ShiftHalfHrCount-arrHalfHr
                  select new {staff,shiftHalfHr})
         {
-            //剪枝:檢查是否達到最大排休日
-            // if(context.TooMuchDayOff(ss.staff.Id,date)) return;
             if(!context.ShiftState.AssignStaff(date,ss.staff.Id,arrHalfHr,ss.shiftHalfHr,ss.staff.StaffType))
                 continue;
             ShiftDfs(context, date, context.NextUndoneArrHalfHr(date,arrHalfHr));

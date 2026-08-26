@@ -62,7 +62,7 @@ public class ShiftCreateContext
        [
            .. from staff in StaffList
            //排除固定班別員工
-           where !Setting.FixedShiftStaff.ContainsKey(staff.Id)
+           // where !Setting.FixedShiftStaff.ContainsKey(staff.Id)
            //排除排假員工
            where offStaffIds == null || !offStaffIds.Contains(staff.Id)
            //排除連上天數已到上限員工
