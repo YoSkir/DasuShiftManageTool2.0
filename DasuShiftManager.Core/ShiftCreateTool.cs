@@ -31,10 +31,10 @@ public class ShiftCreateTool(IDataGetter dataGetter)
         
         var currentDate = new DateOnly(year, month, setting.ShiftStartDay);
         var assignTool = new EveryPossibleAssignTool();
-        var contest = new ShiftCreateContext(setting, vacationData, staffList, currentDate);
-        generator.StartGenerate(contest,assignTool);
+        var context = new ShiftCreateContext(setting, vacationData, staffList, currentDate,dataGetter.GetFixedShift());
+        generator.StartGenerate(context,assignTool);
         
-        return contest.GenerateResult();
+        return context.GenerateResult();
     }
 
     /// <summary>

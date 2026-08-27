@@ -33,11 +33,6 @@ public class TestDataGetter:IDataGetter
                 3,3,
                 3,3],
         };
-        //藥師特殊規則
-        var dayOff = new ShiftInfo();
-        ShiftInfo? blank = null;
-        res.FixedShiftStaff[2] = [dayOff,blank,blank,dayOff,blank,blank,dayOff];
-        
         return res;
     }
 
@@ -81,5 +76,14 @@ public class TestDataGetter:IDataGetter
     public Dictionary<DateOnly, List<int>> GetVacationStaffList()
     {
         return [];
+    }
+
+    public Dictionary<int, ShiftInfo?[]> GetFixedShift()
+    {
+        var res=new Dictionary<int, ShiftInfo?[]>();
+        var dayOff = new ShiftInfo();
+        ShiftInfo? blank = null;
+        res[2] = [dayOff,blank,blank,dayOff,blank,blank,dayOff];
+        return res;
     }
 }

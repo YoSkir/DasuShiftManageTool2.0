@@ -7,7 +7,7 @@ public class DcDfsResultSaver:IResultSaver
     public void SaveResult(ShiftCreateContext context)
     {
         context.IdCount++;
-        var result = new ShiftResult(){ShiftId =  context.IdCount};
+        var result = new DailyShift(){ShiftId =  context.IdCount};
         foreach (var staff in context.StaffList)
         {
             result.StaffShifts[staff.Id]=context.GetShiftCopy(staff.Id,context.StartDate);

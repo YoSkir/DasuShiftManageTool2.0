@@ -24,7 +24,7 @@ public class DfsShiftGenerator : IShiftGenerator
         //遞迴排班
         context.ResultSaver = new MultipleRankResultSaver();
         context.EndDate = context.StartDate.AddMonths(1).AddDays(-1);
-        context.ShiftState = new ShiftStateDfs(context.StartDate,context.EndDate,context.Setting,context.StaffList);
+        context.ShiftState = new DfsShiftState(context.StartDate,context.EndDate,context.Setting,context.StaffList);
         assignTool.ShiftDfs(context,context.StartDate,context.NextUndoneArrHalfHr(context.StartDate));
         //todo 如果結果為0 嘗試增加虛擬員工再次排班
     }
@@ -50,11 +50,12 @@ public class DfsShiftGenerator : IShiftGenerator
     /// <param name="context">目前排班上下文。</param>
     private void AssignFixedShiftStaff(ShiftCreateContext context)
     {
+        if(context.FixedShiftStaff==null) return;
         var date = context.StartDate;
         while (date <=context.EndDate)
         {
             var weekday = (int)date.DayOfWeek;
-            foreach (var fixedPair in context.Setting.FixedShiftStaff)
+            foreach (var fixedPair in context.FixedShiftStaff)
             {
                 var shift = fixedPair.Value?[weekday];
                 if(shift==null||shift.DayOff) continue;

@@ -16,6 +16,11 @@ public class DataGetter:IDataGetter
         return new();
     }
 
+    public Dictionary<int, ShiftInfo?[]> GetFixedShift()
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// 取得排班設定資料。
     /// </summary>

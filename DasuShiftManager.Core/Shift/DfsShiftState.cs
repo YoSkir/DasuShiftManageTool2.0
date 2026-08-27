@@ -5,7 +5,7 @@ namespace DasuShiftManager.Core.Shift;
 /// <summary>
 /// 以 DFS/回溯方式追蹤排班狀態的實作，負責保存每位員工與每日時段的分配紀錄。
 /// </summary>
-public class ShiftStateDfs :IShiftState
+public class DfsShiftState :IShiftState
 {
     //排入員工歷史紀錄，方便遞迴時回溯狀態
     private readonly Stack<AssignMove> _assignHistory = new();
@@ -52,17 +52,18 @@ public class ShiftStateDfs :IShiftState
     /// <param name="firstDay">當月起始日期。</param>
     /// <param name="setting">排班設定。</param>
     /// <param name="staffs">員工清單。</param>
-    public ShiftStateDfs(DateOnly firstDay,DateOnly lastDay, Setting setting, List<Staff> staffs)
+    public DfsShiftState(DateOnly firstDay,DateOnly lastDay, Setting setting, List<Staff> staffs)
     {
         foreach (var staff in staffs)
         {
-            _staffShifts[staff.Id] = new StaffShift();
+            _staffShifts[staff.Id] = new StaffShift(firstDay,lastDay);
         }
 
-        while (firstDay <= lastDay)
+        var date = firstDay;
+        while (date <= lastDay)
         {
-            _monthHalfHrStaffCounts[firstDay] = new int[setting.ShiftHalfHrCount];
-            firstDay=firstDay.AddDays(1);
+            _monthHalfHrStaffCounts[date] = new int[setting.ShiftHalfHrCount];
+            date=date.AddDays(1);
         }
     }
 
@@ -144,6 +145,14 @@ public class ShiftStateDfs :IShiftState
         return _getStaffShift(staffId).GetShiftCopy(date);
     }
 
+    public void AssignShift(Dictionary<int, ShiftInfo> shiftStaffShifts, DateOnly date)
+    {
+        foreach (var staffId in shiftStaffShifts.Keys)
+        {
+            _getStaffShift(staffId).Assigned(date, shiftStaffShifts[staffId]);
+        }
+    }
+
     /// <summary>
     /// 將指定員工標記為休假。
     /// </summary>
@@ -219,99 +228,4 @@ public class AssignMove(DateOnly date,int staffId)
 {
     public DateOnly Date { get; init; } = date;
     public int StaffId { get; init; }=staffId;
-}
-
-/// <summary>
-/// 保存單一員工在月份中的班表狀態。
-/// </summary>
-public class StaffShift
-{
-    private readonly Dictionary<DateOnly, ShiftInfo> _monthShift = new();
-    public int TotalWorkHalfHrs { get; set; }
-    public int ChainWorkDays { get; set; }
-
-    /// <summary>
-    /// 判斷指定日期是否已經存在班表紀錄。
-    /// </summary>
-    /// <param name="date">要檢查的日期。</param>
-    /// <returns>若已排班或已排假則為 <see langword="true"/>。</returns>
-    public bool IsAlreadyAssigned(DateOnly date)
-    {
-        return _monthShift.ContainsKey(date);
-    }
-
-    /// <summary>
-    /// 為指定日期記錄休假狀態。
-    /// </summary>
-    /// <param name="date">休假日期。</param>
-    /// <exception cref="InvalidOperationException">若該日期已被安排過則拋出。</exception>
-    public void AssignedDayOff(DateOnly date) 
-    {
-        if(IsAlreadyAssigned(date))
-            throw new InvalidOperationException($"While assign day off, date {date.ToShortDateString()} is already assigned");
-        _monthShift.Add(date,new ShiftInfo());
-        ChainWorkDays = 0;
-    }
-
-    /// <summary>
-    /// 為指定日期記錄正常工作班別。
-    /// </summary>
-    /// <param name="date">班表日期。</param>
-    /// <param name="startArrHalfHr">開始的半小時索引。</param>
-    /// <param name="workHalfHrs">工作時段長度（半小時）。</param>
-    /// <exception cref="InvalidOperationException">若該日期已安排過則拋出。</exception>
-    public void Assigned(DateOnly date, int startArrHalfHr, int workHalfHrs)
-    {
-        if(IsAlreadyAssigned(date))
-            throw new InvalidOperationException($"While assign work,date {date.ToShortDateString()} is already assigned");
-        if (!_monthShift.TryGetValue(date.AddDays(-1), out var shiftInfo)||shiftInfo.DayOff) ChainWorkDays = 0;
-        ChainWorkDays++;
-        TotalWorkHalfHrs+=workHalfHrs;
-        _monthShift.Add(date,new ShiftInfo(startArrHalfHr,workHalfHrs));
-    }
-
-    /// <summary>
-    /// 撤銷指定日期的班表安排。
-    /// </summary>
-    /// <param name="date">要撤銷的日期。</param>
-    /// <returns>被撤銷的班表資訊。</returns>
-    /// <exception cref="InvalidOperationException">若該日期不存在排班紀錄則拋出。</exception>
-    public ShiftInfo Unassigned(DateOnly date)
-    {
-        if (!_monthShift.Remove(date, out var shiftInfo))
-        {
-            throw new InvalidOperationException($"Date {date.ToShortDateString()} is not assigned");
-        }
-
-        if (!shiftInfo.DayOff)
-        {
-            TotalWorkHalfHrs-=shiftInfo.WorkHalfHrs;
-            //這裡要注意 因為是遞迴呼叫總是最後一步才能這樣扣連續上班日
-            ChainWorkDays = Math.Max(0, ChainWorkDays - 1);
-        }
-        return shiftInfo;
-    }
-
-    /// <summary>
-    /// 判斷指定日期是否為休假日。
-    /// </summary>
-    /// <param name="date">日期。</param>
-    /// <returns>若為休假或尚未安排排班，則返回 <see langword="true"/>。</returns>
-    public bool IsDayOff(DateOnly date)
-    {
-        //因為用於遞迴途中往回檢查一周放假天數 所以null也會算放假 故不適合往未來查
-        return !_monthShift.TryGetValue(date, out var shiftInfo) || shiftInfo.DayOff;
-    }
-
-    public int GetWorkHalfHrs(DateOnly date)
-    {
-        return _monthShift.TryGetValue(date, out var shiftInfo) ? shiftInfo.WorkHalfHrs : 0;
-    }
-
-    public ShiftInfo GetShiftCopy(DateOnly date)
-    {
-        if (!_monthShift.TryGetValue(date, out var shiftInfo))
-            return new ShiftInfo();
-        return new ShiftInfo(){DayOff = shiftInfo.DayOff,StartArrHalfHr = shiftInfo.StartArrHalfHr,WorkHalfHrs = shiftInfo.WorkHalfHrs};
-    }
 }

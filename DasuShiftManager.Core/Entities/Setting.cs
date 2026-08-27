@@ -15,5 +15,4 @@ public class Setting
     public int MaxChainWorkDays { get; init; }
     public int MinWeekRestDays { get; init; }
     public int MinMonthWorkHrs { get; init; }
-    public Dictionary<int, ShiftInfo?[]> FixedShiftStaff { get; init; } = new();
 }

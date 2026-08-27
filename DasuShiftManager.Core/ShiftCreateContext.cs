@@ -18,7 +18,10 @@ public class ShiftCreateContext
     public int IdCount { get; set; }
     public IResultSaver ResultSaver { get; set; }
     //單日所有可能
-    public List<ShiftResult> DailyShift { get;} =[];
+    public List<DailyShift> DailyShift { get;} =[];
+    public IShiftState? PrevShiftState { get; init; }
+    public Dictionary<int, ShiftInfo?[]> FixedShiftStaff { get; init; }
+
 
 
     /// <summary>
@@ -30,12 +33,13 @@ public class ShiftCreateContext
     /// <param name="startDate">排班起始日期。</param>
     /// <exception cref="InvalidOperationException">設定資料不合法時拋出。</exception>
     public ShiftCreateContext(Setting setting,
-       Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, DateOnly startDate)
+       Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, DateOnly startDate,Dictionary<int, ShiftInfo?[]>? fixedShiftStaff)
     {
        StartDate = startDate;
        Setting = setting;
        VacationData = vacationData;
        StaffList = staffList;
+       FixedShiftStaff=fixedShiftStaff ?? [];
        if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)
            throw new InvalidOperationException("ShiftHalfHrType is null or empty");
        IdCount = 0;

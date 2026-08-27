@@ -7,4 +7,6 @@ public interface IDataGetter
     Setting GetSetting();
     List<Staff> GetStaffList();
     Dictionary<DateOnly, List<int>> GetVacationStaffList();
+    Dictionary<int, ShiftInfo?[]> GetFixedShift();
+
 }

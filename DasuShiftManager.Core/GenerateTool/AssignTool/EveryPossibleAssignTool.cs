@@ -39,6 +39,5 @@ public class EveryPossibleAssignTool : IAssignTool
             ShiftDfs(context, date, context.NextUndoneArrHalfHr(date,arrHalfHr));
             context.ShiftState.UnassignStaff();
         }
-        //這裡不順便補上沒排班人員的假日 是因為會擾亂遞迴歷史紀錄
     }
 }
