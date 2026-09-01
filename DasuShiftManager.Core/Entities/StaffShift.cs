@@ -140,4 +140,14 @@ public class StaffShift
         }
         _monthShift[date] = shiftInfo;
     }
+
+    public int GetThisWeekDayOff(DateOnly date)
+    {
+        if (!WeekIndex.TryGetValue(date, out var weekIndex))
+        {
+            Console.WriteLine($"Week index of date {date.ToShortDateString()} is not assigned");
+            return 0;
+        }
+        return WeekDayOffCount.GetValueOrDefault(weekIndex,0);
+    }
 }

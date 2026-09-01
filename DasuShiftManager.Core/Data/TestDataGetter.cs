@@ -86,4 +86,11 @@ public class TestDataGetter:IDataGetter
         res[2] = [dayOff,blank,blank,dayOff,blank,blank,dayOff];
         return res;
     }
+
+    public Dictionary<int, StaffPreferShift> GetPreferShift()
+    {
+        var res = new Dictionary<int, StaffPreferShift>();
+        res[2] = new StaffPreferShift(){StartArrHalfHr =0};
+        return res;
+    }
 }

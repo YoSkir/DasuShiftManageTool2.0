@@ -21,6 +21,11 @@ public class DataGetter:IDataGetter
         throw new NotImplementedException();
     }
 
+    public Dictionary<int, StaffPreferShift> GetPreferShift()
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// 取得排班設定資料。
     /// </summary>

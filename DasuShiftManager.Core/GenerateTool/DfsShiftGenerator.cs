@@ -50,7 +50,6 @@ public class DfsShiftGenerator : IShiftGenerator
     /// <param name="context">目前排班上下文。</param>
     private void AssignFixedShiftStaff(ShiftCreateContext context)
     {
-        if(context.FixedShiftStaff==null) return;
         var date = context.StartDate;
         while (date <=context.EndDate)
         {

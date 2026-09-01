@@ -1,4 +1,5 @@
-﻿using DasuShiftManager.Core.Entities;
+﻿using DasuShiftManager.Core.Data;
+using DasuShiftManager.Core.Entities;
 using DasuShiftManager.Core.GenerateTool.ResultSaver;
 using DasuShiftManager.Core.Shift;
 
@@ -9,6 +10,8 @@ namespace DasuShiftManager.Core;
 /// </summary>
 public class ShiftCreateContext
 {
+    public bool t { get; set; }
+    
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
     public Setting Setting { get;  }
@@ -21,6 +24,8 @@ public class ShiftCreateContext
     public List<DailyShift> DailyShift { get;} =[];
     public IShiftState? PrevShiftState { get; init; }
     public Dictionary<int, ShiftInfo?[]> FixedShiftStaff { get; init; }
+    
+    public Dictionary<int,StaffPreferShift> PreferShift { get; init; }
 
 
 
@@ -33,13 +38,14 @@ public class ShiftCreateContext
     /// <param name="startDate">排班起始日期。</param>
     /// <exception cref="InvalidOperationException">設定資料不合法時拋出。</exception>
     public ShiftCreateContext(Setting setting,
-       Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, DateOnly startDate,Dictionary<int, ShiftInfo?[]>? fixedShiftStaff)
+       Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, DateOnly startDate,IDataGetter dataGetter)
     {
        StartDate = startDate;
        Setting = setting;
        VacationData = vacationData;
        StaffList = staffList;
-       FixedShiftStaff=fixedShiftStaff ?? [];
+       FixedShiftStaff=dataGetter.GetFixedShift() ?? [];
+       PreferShift = dataGetter.GetPreferShift() ?? [];
        if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)
            throw new InvalidOperationException("ShiftHalfHrType is null or empty");
        IdCount = 0;

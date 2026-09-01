@@ -54,4 +54,9 @@ public class PrevShiftState:IShiftState
     {
         throw new NotImplementedException();
     }
+
+    public int GetTotalWorkHalfHrs(int staffId)
+    {
+        throw new NotImplementedException();
+    }
 }

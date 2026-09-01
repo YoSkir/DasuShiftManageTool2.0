@@ -13,7 +13,6 @@ public class DfsShiftState :IShiftState
     //這裡把字典的獲取另外抽離，減少獲取內容時檢查的程式碼，並且將未來可能的檢查與錯誤處理留下擴充空間
     //已排的每日半時員工數
     private readonly Dictionary<DateOnly, int[]> _monthHalfHrStaffCounts = new();
-
     /// <summary>
     /// 取得指定日期的半小時人力統計資料。
     /// </summary>
@@ -78,6 +77,13 @@ public class DfsShiftState :IShiftState
     /// <returns>若成功排班則返回 <see langword="true"/>。</returns>
     public bool AssignStaff(DateOnly date, int staffId, int startArrHalfHr, int workHalfHrs, StaffType staffType)
     {
+        var hhsc = _getDailyHHSC(date);
+        if (startArrHalfHr + workHalfHrs > hhsc.Length)
+        {
+            Console.WriteLine($"While staff {staffId} assign date {date.ToShortDateString()} half hr overflow");
+            return false;
+        }
+        
         try
         {
             _getStaffShift(staffId).Assigned(date,startArrHalfHr,workHalfHrs);
@@ -87,12 +93,7 @@ public class DfsShiftState :IShiftState
             Console.WriteLine(e);
             return false;
         }
-        var hhsc = _getDailyHHSC(date);
-        if (startArrHalfHr + workHalfHrs > hhsc.Length)
-        {
-            Console.WriteLine($"While staff {staffId} assign date {date.ToShortDateString()} half hr overflow");
-            return false;
-        }
+        
         for (var i = 0; i < workHalfHrs; i++)
         {
             hhsc[startArrHalfHr + i]++;
@@ -109,23 +110,24 @@ public class DfsShiftState :IShiftState
     /// <returns>該週已休假的天數。</returns>
     public int GetVacationsOfCurrentWeek(int staffId, DateOnly date)
     {
-        var c = 0;
         var shiftInfo = _getStaffShift(staffId);
-        var getDate = date;
-
-        if (getDate.DayOfWeek == DayOfWeek.Sunday)
-        {
-            if (shiftInfo.IsDayOff(getDate)) c++;
-            getDate=getDate.AddDays(-1);
-        }
-        
-        while (getDate.DayOfWeek != DayOfWeek.Sunday)
-        {
-            if (shiftInfo.IsDayOff(getDate)) c++;
-            getDate=getDate.AddDays(-1);
-        }
-
-        return c;
+        return shiftInfo.GetThisWeekDayOff(date);
+        // var c = 0;
+        // var getDate = date;
+        //
+        // if (getDate.DayOfWeek == DayOfWeek.Sunday)
+        // {
+        //     if (shiftInfo.IsDayOff(getDate)) c++;
+        //     getDate=getDate.AddDays(-1);
+        // }
+        //
+        // while (getDate.DayOfWeek != DayOfWeek.Sunday)
+        // {
+        //     if (shiftInfo.IsDayOff(getDate)) c++;
+        //     getDate=getDate.AddDays(-1);
+        // }
+        //
+        // return c;
     }
 
     public int GetWorkHalfHrs(int staffId, DateOnly date, int countDays)
@@ -149,8 +151,17 @@ public class DfsShiftState :IShiftState
     {
         foreach (var staffId in shiftStaffShifts.Keys)
         {
-            _getStaffShift(staffId).Assigned(date, shiftStaffShifts[staffId]);
+            var shiftInfo=shiftStaffShifts[staffId];
+            if(shiftInfo.DayOff)
+                _getStaffShift(staffId).AssignedDayOff(date);
+            else
+                _getStaffShift(staffId).Assigned(date, shiftInfo);
         }
+    }
+
+    public int GetTotalWorkHalfHrs(int staffId)
+    {
+        return _getStaffShift(staffId).TotalWorkHalfHrs;
     }
 
     /// <summary>
