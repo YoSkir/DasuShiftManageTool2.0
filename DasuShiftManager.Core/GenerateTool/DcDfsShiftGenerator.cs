@@ -173,19 +173,7 @@ public static class DcDfsTool
 
                 temp.Clear();
             }
-
-            //每月最少放假日篩選
-            if (priorityShift.Count > 1)
-            {
-                if (temp.Count > 0)
-                {
-                    priorityShift.Clear();
-                    priorityShift.AddRange(temp);
-                }
-
-                temp.Clear();
-            }
-
+            
             //找最少員工連續全班
             if (priorityShift.Count > 1)
             {
@@ -206,6 +194,13 @@ public static class DcDfsTool
             date = date.AddDays(1);
         }
 
+        foreach (var staff in context.StaffList)
+        {
+            if(context.ShiftState.GetTotalWorkHalfHrs(staff.Id)<context.Setting.MinMonthWorkHrs*2)
+                return false;
+            if(context.ShiftState.GetTotalRestDays(staff.Id)<context.Setting.MinMonthRestDays)
+                return false;
+        }
         return true;
     }
 

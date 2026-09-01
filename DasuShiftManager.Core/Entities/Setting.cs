@@ -15,4 +15,5 @@ public class Setting
     public int MaxChainWorkDays { get; init; }
     public int MinWeekRestDays { get; init; }
     public int MinMonthWorkHrs { get; init; }
+    public int MinMonthRestDays { get; init; }
 }

@@ -164,6 +164,11 @@ public class DfsShiftState :IShiftState
         return _getStaffShift(staffId).TotalWorkHalfHrs;
     }
 
+    public int GetTotalRestDays(int staffId)
+    {
+        return _getStaffShift(staffId).GetTotalRestDays();
+    }
+
     /// <summary>
     /// 將指定員工標記為休假。
     /// </summary>

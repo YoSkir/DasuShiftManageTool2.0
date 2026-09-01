@@ -150,4 +150,9 @@ public class StaffShift
         }
         return WeekDayOffCount.GetValueOrDefault(weekIndex,0);
     }
+
+    public int GetTotalRestDays()
+    {
+        return WeekDayOffCount.Values.Sum();
+    }
 }

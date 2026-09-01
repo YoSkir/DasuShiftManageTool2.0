@@ -59,4 +59,9 @@ public class PrevShiftState:IShiftState
     {
         throw new NotImplementedException();
     }
+
+    public int GetTotalRestDays(int staffId)
+    {
+        throw new NotImplementedException();
+    }
 }

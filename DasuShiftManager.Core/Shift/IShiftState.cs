@@ -66,4 +66,5 @@ public interface IShiftState
     ShiftInfo GetShiftCopy(int staffId, DateOnly date);
     void AssignShift(Dictionary<int, ShiftInfo> shiftStaffShifts, DateOnly date);
     int GetTotalWorkHalfHrs(int staffId);
+    int GetTotalRestDays(int staffId);
 }

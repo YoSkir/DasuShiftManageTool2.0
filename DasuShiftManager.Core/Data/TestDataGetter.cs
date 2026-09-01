@@ -17,6 +17,7 @@ public class TestDataGetter:IDataGetter
             MaxChainWorkDays = 6,
             MinWeekRestDays = 2,
             MinMonthWorkHrs = 152,
+            MinMonthRestDays = 9,
             ShiftHalfHrType = [13,17,22,26],
             EveryHalfHrMinWorkers = 
             [2,2,
