@@ -36,6 +36,10 @@ public class EveryPossibleAssignTool : IAssignTool
         {
             if(!context.ShiftState.AssignStaff(date,ss.staff.Id,arrHalfHr,ss.shiftHalfHr,ss.staff.StaffType))
                 continue;
+            if (!context.IsWorkerFull(date, arrHalfHr))
+            {
+                ShiftDfs(context, date, arrHalfHr);
+            }
             ShiftDfs(context, date, context.NextUndoneArrHalfHr(date,arrHalfHr));
             context.ShiftState.UnassignStaff();
         }

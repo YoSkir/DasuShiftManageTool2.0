@@ -2,11 +2,12 @@
 
 namespace DasuShiftManager.Core.Data;
 
-public class TestDataGetter:IDataGetter
+public class TestDataGetter : IDataGetter
 {
     public Setting GetSetting()
     {
-        var res= new Setting{
+        var res = new Setting
+        {
             ShiftStartDay = 2,
             ShiftStartHalfHr = 18,
             ShiftHalfHrCount = 26,
@@ -18,59 +19,77 @@ public class TestDataGetter:IDataGetter
             MinWeekRestDays = 2,
             MinMonthWorkHrs = 152,
             MinMonthRestDays = 9,
-            ShiftHalfHrType = [13,17,22,26],
-            EveryHalfHrMinWorkers = 
-            [2,2,
-                2,2,
-                3,3,
-                3,3,
-                3,3,
-                3,3,
-                3,3,
-                3,3,
-                3,3,
-                3,3,
-                3,3,
-                3,3,
-                3,3],
+            ShiftHalfHrType = [13, 17, 22, 26],
+            EveryHalfHrMinWorkers =
+            [
+                2, 2,
+                2, 2,
+                2, 2,
+                2, 2,
+                2, 2,
+                2, 2,
+                2, 2,
+                2, 2,
+                2, 2,
+                2, 2,
+                2, 2,
+                1, 1,
+                1, 1
+            ],
+            EveryHalfHrMaxWorkers =
+            [
+                2, 2,
+                2, 2,
+                3, 3,
+                3, 3,
+                3, 3,
+                3, 3,
+                3, 3,
+                3, 3,
+                3, 3,
+                3, 3,
+                3, 3,
+                3, 3,
+                3, 3
+            ],
         };
         return res;
     }
 
     public List<Staff> GetStaffList()
     {
-        var res=new List<Staff>();
+        var res = new List<Staff>();
         res.Add(new Staff()
         {
             Id = 1,
-            Name="吳玟頤",
+            Name = "吳玟頤",
             StaffType = StaffType.Manager
         });
         res.Add(new Staff()
         {
             Id = 2,
-            Name="沈煌偉",
+            Name = "沈煌偉",
             StaffType = StaffType.Pharmacist
         });
         res.Add(new Staff()
         {
             Id = 3,
-            Name="周怡伶",
+            Name = "周怡伶",
             StaffType = StaffType.Normal
         });
         res.Add(new Staff()
         {
             Id = 4,
-            Name="郭婷芳",
+            Name = "郭婷芳",
             StaffType = StaffType.Normal
         });
         res.Add(new Staff()
         {
             Id = 5,
-            Name="陳姿涵",
+            Name = "陳姿涵",
             StaffType = StaffType.Normal
         });
-        
+
         return res;
     }
 
@@ -81,17 +100,18 @@ public class TestDataGetter:IDataGetter
 
     public Dictionary<int, ShiftInfo?[]> GetFixedShift()
     {
-        var res=new Dictionary<int, ShiftInfo?[]>();
+        var res = new Dictionary<int, ShiftInfo?[]>();
         var dayOff = new ShiftInfo();
         ShiftInfo? blank = null;
-        res[2] = [dayOff,blank,blank,dayOff,blank,blank,dayOff];
+        var all = new ShiftInfo(0, 26);
+        res[2] = [dayOff, all, all, dayOff, all, all, dayOff];
         return res;
     }
 
     public Dictionary<int, StaffPreferShift> GetPreferShift()
     {
         var res = new Dictionary<int, StaffPreferShift>();
-        res[2] = new StaffPreferShift(){StartArrHalfHr =0};
+        // res[2] = new StaffPreferShift() { StartArrHalfHr = 0 };
         return res;
     }
 

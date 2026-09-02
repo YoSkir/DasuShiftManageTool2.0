@@ -11,6 +11,7 @@ public class Setting
     public int SecondBreakDurationHalfHrs { get; init; }
     public List<int> ShiftHalfHrType { get; init; } = [12,16,20,24];
     public int[] EveryHalfHrMinWorkers { get; init; } = [];
+    public int[] EveryHalfHrMaxWorkers { get; init; } = [];
     public int[] EveryHalfHrMinManagersOrPharmacist { get; init; }=[];
     public int MaxChainWorkDays { get; init; }
     public int MinWeekRestDays { get; init; }

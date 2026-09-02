@@ -98,6 +98,12 @@ public class ShiftCreateContext
        var neededWorkers = Setting.EveryHalfHrMinWorkers[arrHalfHr];
        return currentWorkers>=neededWorkers;
     }
+    public bool IsWorkerFull(DateOnly date, int arrHalfHr)
+    {
+        var currentWorkers = ShiftState.GetArrHalfHrAssignedStaffCount(date, arrHalfHr);
+        var neededWorkers = Setting.EveryHalfHrMaxWorkers[arrHalfHr];
+        return currentWorkers>=neededWorkers;
+    }
 
     /// <summary>
     /// 檢查指定員工在當周是否已滿足最低排假限制。

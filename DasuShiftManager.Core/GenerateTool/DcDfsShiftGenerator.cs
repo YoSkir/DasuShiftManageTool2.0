@@ -22,7 +22,7 @@ public class DcDfsShiftGenerator : IShiftGenerator
             if (tryCount > 1000)
             {
                 Console.WriteLine("嘗試失敗");
-                break;
+                throw new Exception();
             }
         }
         Console.WriteLine($"TryCount: {tryCount}");
