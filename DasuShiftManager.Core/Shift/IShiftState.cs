@@ -67,4 +67,7 @@ public interface IShiftState
     void AssignShift(Dictionary<int, ShiftInfo> shiftStaffShifts, DateOnly date);
     int GetTotalWorkHalfHrs(int staffId);
     int GetTotalRestDays(int staffId);
+    void AssignPto(int staffId);
+
+    public static int PtoHalfHr=13;
 }

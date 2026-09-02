@@ -10,8 +10,7 @@ namespace DasuShiftManager.Core;
 /// </summary>
 public class ShiftCreateContext
 {
-    public bool t { get; set; }
-    
+    public Dictionary<DateOnly, List<int>> PtoData { get;  }
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
     public Setting Setting { get;  }
@@ -28,22 +27,22 @@ public class ShiftCreateContext
     public Dictionary<int,StaffPreferShift> PreferShift { get; init; }
 
 
-
     /// <summary>
     /// 建立排班上下文。
     /// </summary>
     /// <param name="setting">排班設定。</param>
-    /// <param name="vacationData">休假資料。</param>
-    /// <param name="staffList">員工清單。</param>
     /// <param name="startDate">排班起始日期。</param>
+    /// <param name="dataGetter">資料獲取器</param>
     /// <exception cref="InvalidOperationException">設定資料不合法時拋出。</exception>
-    public ShiftCreateContext(Setting setting,
-       Dictionary<DateOnly, List<int>> vacationData, List<Staff> staffList, DateOnly startDate,IDataGetter dataGetter)
+    public ShiftCreateContext(Setting setting, DateOnly startDate,IDataGetter dataGetter)
     {
        StartDate = startDate;
        Setting = setting;
-       VacationData = vacationData;
-       StaffList = staffList;
+       PtoData = dataGetter.GetPtoStaffList();
+       VacationData = dataGetter.GetVacationStaffList();
+       StaffList = dataGetter.GetStaffList();
+       if(StaffList.Count==0)
+           throw new InvalidOperationException("No staff list found");
        FixedShiftStaff=dataGetter.GetFixedShift() ?? [];
        PreferShift = dataGetter.GetPreferShift() ?? [];
        if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)

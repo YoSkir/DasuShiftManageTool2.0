@@ -32,15 +32,11 @@ public class Tests
         var dataGetter = new TestDataGetter();
         var setting = dataGetter.GetSetting();
         if (setting == null) throw new Exception("No settings found");
-        var vacationData = dataGetter.GetVacationStaffList();
-        var staffList = dataGetter.GetStaffList();
-        if (staffList.Count == 0) throw new Exception("Staff not found");
-
         //todo 檢查員公數如果不合理(目前想到: 只有一個員工，或員工人數等於少於每日最高可能人數) 則建議使用者招人 並補上最低所需虛擬員工
 
         var currentDate = new DateOnly(2026, 9, setting.ShiftStartDay);
         var assignTool = new EveryPossibleAssignTool();
-        var context = new ShiftCreateContext(setting, vacationData, staffList, currentDate, dataGetter);
+        var context = new ShiftCreateContext(setting,currentDate, dataGetter);
         //分治法 排出一天所有可能後儲存
         context.ResultSaver = new DcDfsResultSaver();
         context.EndDate = context.StartDate;

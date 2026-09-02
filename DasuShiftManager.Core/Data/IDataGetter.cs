@@ -9,4 +9,5 @@ public interface IDataGetter
     Dictionary<DateOnly, List<int>> GetVacationStaffList();
     Dictionary<int, ShiftInfo?[]> GetFixedShift();
     Dictionary<int,StaffPreferShift> GetPreferShift();
+    Dictionary<DateOnly, List<int>> GetPtoStaffList();
 }

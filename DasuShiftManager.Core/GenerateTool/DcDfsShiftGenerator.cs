@@ -31,16 +31,14 @@ public static class DcDfsTool
         if (context.PrevShiftState != null)
         {
         }
-
-        //每天篩選: 最後符合最低時數、指定早或晚、藥師需求
-        //額外篩選(如果有就套用 沒有就不套): 不要連續全班 不要晚接早 不要連續放超過3天 偏好排班
-        //多結果時使用亂數(或是之前的排行法找當下複數最優解)
+        
         while (date <= context.EndDate)
         {
             var todayAvailableShift = new List<DailyShift>();
             var intDayOfWeek = (int)date.DayOfWeek;
             //指定篩選:
             HashSet<int> dayOffStaff = [.. context.VacationData.TryGetValue(date, out var list) ? list : []];
+            HashSet<int> ptoStaff=[.. context.PtoData.TryGetValue(date,out var ptoList)? ptoList : []];
             foreach (var dailyShift in context.DailyShift)
             {
                 var skip = false;
@@ -53,7 +51,12 @@ public static class DcDfsTool
                         skip = true;
                         break;
                     }
-
+                    //特休
+                    if (ptoStaff.Contains(staffId) && !staffShift.DayOff)
+                    {
+                        skip = true;
+                        break;
+                    }
                     //篩選指定班
                     if (context.FixedShiftStaff.TryGetValue(staffId, out var fixedShift))
                     {
@@ -79,7 +82,6 @@ public static class DcDfsTool
                             }
                         }
                     }
-
                     //篩選最高連上天數
                     if (context.ShiftState.GetChainWorkDays(staffId) == context.Setting.MaxChainWorkDays &&
                         !staffShift.DayOff)
@@ -87,7 +89,6 @@ public static class DcDfsTool
                         skip = true;
                         break;
                     }
-
                     //篩選每周最低排假
                     var satAndDayOffIs0 = date.DayOfWeek == DayOfWeek.Saturday
                                           && context.ShiftState.GetVacationsOfCurrentWeek(staffId, date) == 0;
@@ -105,15 +106,8 @@ public static class DcDfsTool
                 todayAvailableShift.Add(dailyShift);
             }
 
-            //無符合結果時空著
-            if (todayAvailableShift.Count == 0)
-            {
-                // Console.WriteLine($"No available shift on date ${date.ToShortDateString()}");
-                return false;
-                date = date.AddDays(1);
-                continue;
-            }
-
+            //無符合結果時斷開
+            if (todayAvailableShift.Count == 0) return false;
             //額外篩選:
             var priorityShift = new List<DailyShift>();
             var temp = new List<DailyShift>();
@@ -191,9 +185,15 @@ public static class DcDfsTool
                 ? _getRandomDailyShift(todayAvailableShift)
                 : _getRandomDailyShift(priorityShift);
             context.ShiftState.AssignShift(shift.StaffShifts, date);
+            //特休捕時數
+            foreach (var staffId in ptoStaff)
+            {
+                context.ShiftState.AssignPto(staffId);
+            }
             date = date.AddDays(1);
         }
 
+        //篩選每月時數與休假日
         foreach (var staff in context.StaffList)
         {
             if(context.ShiftState.GetTotalWorkHalfHrs(staff.Id)<context.Setting.MinMonthWorkHrs*2)

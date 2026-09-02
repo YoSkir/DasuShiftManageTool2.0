@@ -169,6 +169,12 @@ public class DfsShiftState :IShiftState
         return _getStaffShift(staffId).GetTotalRestDays();
     }
 
+    public void AssignPto(int staffId)
+    {
+        _getStaffShift(staffId).TotalWorkHalfHrs += IShiftState.PtoHalfHr;
+        _assignHistory.Push(new AssignMove(staffId,true));
+    }
+
     /// <summary>
     /// 將指定員工標記為休假。
     /// </summary>
@@ -180,6 +186,7 @@ public class DfsShiftState :IShiftState
         try
         {
             _getStaffShift(staffId).AssignedDayOff(date);
+            _assignHistory.Push(new AssignMove(date,staffId));
             return true;
         }
         catch (Exception e)
@@ -206,6 +213,11 @@ public class DfsShiftState :IShiftState
     public void UnassignStaff()
     {
         var lastMove=_assignHistory.Pop();
+        if (lastMove.Pto)
+        {
+            _getStaffShift(lastMove.StaffId).TotalWorkHalfHrs -= IShiftState.PtoHalfHr;
+            return;
+        }
         var shiftInfo=_getStaffShift(lastMove.StaffId).Unassigned(lastMove.Date);
         if(shiftInfo.DayOff) return;
         var hhsc = _getDailyHHSC(lastMove.Date);
@@ -240,8 +252,22 @@ public class DfsShiftState :IShiftState
 /// <summary>
 /// 保存一次排班回溯所需的日期與員工資訊。
 /// </summary>
-public class AssignMove(DateOnly date,int staffId)
+public class AssignMove
 {
-    public DateOnly Date { get; init; } = date;
-    public int StaffId { get; init; }=staffId;
+    public DateOnly Date { get;}
+    public int StaffId { get;}
+    public bool Pto { get; }
+
+    public AssignMove(DateOnly date, int staffId)
+    {
+        Date = date;
+        StaffId = staffId;
+        Pto = false;
+    }
+
+    public AssignMove(int staffId, bool pto)
+    {
+        StaffId = staffId;
+        Pto = true;
+    }
 }

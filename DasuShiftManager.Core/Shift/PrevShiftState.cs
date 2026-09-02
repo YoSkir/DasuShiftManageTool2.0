@@ -64,4 +64,9 @@ public class PrevShiftState:IShiftState
     {
         throw new NotImplementedException();
     }
+
+    public void AssignPto(int staffId)
+    {
+        throw new NotImplementedException();
+    }
 }

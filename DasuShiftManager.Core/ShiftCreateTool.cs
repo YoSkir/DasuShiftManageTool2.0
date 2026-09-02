@@ -31,7 +31,7 @@ public class ShiftCreateTool(IDataGetter dataGetter)
         
         var currentDate = new DateOnly(year, month, setting.ShiftStartDay);
         var assignTool = new EveryPossibleAssignTool();
-        var context = new ShiftCreateContext(setting, vacationData, staffList, currentDate,dataGetter);
+        var context = new ShiftCreateContext(setting,currentDate,dataGetter);
         generator.StartGenerate(context,assignTool);
         
         return context.GenerateResult();

@@ -94,4 +94,9 @@ public class TestDataGetter:IDataGetter
         res[2] = new StaffPreferShift(){StartArrHalfHr =0};
         return res;
     }
+
+    public Dictionary<DateOnly, List<int>> GetPtoStaffList()
+    {
+        throw new NotImplementedException();
+    }
 }
