@@ -69,5 +69,5 @@ public interface IShiftState
     int GetTotalRestDays(int staffId);
     void AssignPto(int staffId);
 
-    public static int PtoHalfHr=13;
+    public static readonly int PtoHalfHr=13;
 }

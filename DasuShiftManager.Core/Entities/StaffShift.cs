@@ -20,11 +20,16 @@ public class StaffShift
         WeekDayOffCount =[];
         WeekIndex = [];
         var weekIndex = 1;
+        WeekDayOffCount[weekIndex] = 0;
         var date = startDate;
         while (date <= endDate)
         {
             WeekIndex[date] = weekIndex;
-            if (date.DayOfWeek == DayOfWeek.Sunday)weekIndex++;
+            if (date.DayOfWeek == DayOfWeek.Sunday)
+            {
+                weekIndex++;
+                WeekDayOffCount[weekIndex] = 0;
+            }
             date=date.AddDays(1);
         }
     }
@@ -49,8 +54,7 @@ public class StaffShift
         if(IsAlreadyAssigned(date))
             throw new InvalidOperationException($"While assign day off, date {date.ToShortDateString()} is already assigned");
         _monthShift[date]=new ShiftInfo();
-        WeekDayOffCount[WeekIndex[date]]=WeekDayOffCount.GetValueOrDefault(WeekIndex[date],0)+1;
-        CollectionsMarshal.GetValueRefOrAddDefault(WeekDayOffCount,WeekIndex[date],out _)++;
+        WeekDayOffCount[WeekIndex[date]]++;
         ChainWorkDays = 0;
     }
 
@@ -94,7 +98,7 @@ public class StaffShift
         }
         else
         {
-            WeekDayOffCount[WeekIndex[date]]=Math.Max(0,WeekDayOffCount.GetValueOrDefault(WeekIndex[date],0)-1);
+            WeekDayOffCount[WeekIndex[date]]=Math.Max(0,WeekDayOffCount[WeekIndex[date]]-1);
         }
         return shiftInfo;
     }
@@ -130,7 +134,7 @@ public class StaffShift
     {
         if (shiftInfo.DayOff)
         {
-            CollectionsMarshal.GetValueRefOrAddDefault(WeekDayOffCount,WeekIndex[date],out _)++;
+            WeekDayOffCount[WeekIndex[date]]++;
             ChainWorkDays = 0;
         }
         else

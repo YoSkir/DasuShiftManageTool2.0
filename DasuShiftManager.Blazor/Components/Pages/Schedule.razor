@@ -1,0 +1,318 @@
+﻿@page "/schedule-report"
+@using System.Collections
+@using System.Globalization
+@using DasuShiftManager.Core
+@using DasuShiftManager.Core.Data
+@using DasuShiftManager.Core.Entities
+@using DasuShiftManager.Core.GenerateTool
+@inherits LayoutComponentBase
+
+
+<MudContainer MaxWidth="MaxWidth.False" Style="width: 100%" Class="mt-4">
+
+    <!-- 1. 頂部抬頭資訊區 -->
+    <MudPaper Class="pa-3 mb-2" Color="Color.Primary" Style=" border: 1px solid #111;">
+        <MudGrid Spacing="1" Justify="Justify.SpaceBetween">
+            <MudItem xs="4">
+                <MudText Typo="Typo.h6" Style="font-weight: bold">
+                    2026年 8/2 ～ 8/29 大樹連鎖藥局 ～ 0196仁武中華
+                </MudText>
+            </MudItem>
+            <MudItem xs="4" Class="text-center">
+                <MudText Typo="Typo.h6" Style="font-weight: bold;">
+                    排 定 班 別
+                </MudText>
+            </MudItem>
+            <MudItem xs="4" Class="text-right">
+                <MudText Typo="Typo.h6" Style="font-weight: bold">
+                    應上時數/應休天數：152H / 9天
+                </MudText>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- 2. 排班主體表格 (Excel Style Table) -->
+    <div style="overflow-x: auto;">
+        <table class="schedule-table">
+            <thead>
+            <!-- 第一層標頭：職級 -->
+            <tr>
+                <th rowspan="3" colspan="2" class="bg-yellow fix-col-2">日期</th>
+                <th colspan="1" class="bg-yellow">職級</th>
+                @foreach (var staff in _staffList)
+                {
+                    <th class="bg-yellow">@_getTitleZh(staff.StaffType)</th>
+                }
+            </tr>
+            <!-- 第三層標頭：姓名與班別標記 -->
+            <tr>
+                <th class="bg-yellow">姓名</th>
+                @foreach (var staff in _staffList)
+                {
+                    <th class="bg-yellow">@staff.Name</th>
+                }
+            </tr>
+            </thead>
+            <tbody>
+            @{ var rowIndex = 0; }
+            @foreach (var row in _scheduleRowModels)
+            {
+                rowIndex++;
+                <tr>
+                    <!-- 綠色行事曆/標籤欄位 -->
+                    @{
+                        shiftCellClass = (rowIndex & 1) == 0 ? "bg-green" : "bg-green-dark";
+                    }
+                    <td class="@shiftCellClass font-bold">@row.DayOfMonth</td>
+                    <td class="@shiftCellClass font-bold">@row.DayOfWeek</td>
+                    @{
+                        shiftCellClass = (rowIndex & 1) == 0 ? "bg-yellow" : "bg-yellow-dark";
+                    }
+                    <td class="@shiftCellClass"></td>
+
+                    <!-- 員工個人排班（資料填寫區） -->
+                    @foreach (var shift in row.Shift)
+                    {
+                        <td class="@shiftCellClass">@shift</td>
+                    }
+                </tr>
+            }
+            </tbody>
+            <tfoot>
+            <tr class="bg-yellow font-bold">
+                <td colspan="3">總時數(含所有假別及補休)</td>
+                @foreach (var hr in _totalHr)
+                {
+                    <td>@hr</td>
+                }
+            </tr>
+            </tfoot>
+        </table>
+        <table class="schedule-table">
+            <!-- 3. 底部統計與加總區 (Footer) -->
+            <tbody>
+            <tr class="bg-yellow font-bold">
+                <td colspan="3">總時數(含所有假別及補休)</td>
+                <td>152</td>
+                <td>152</td>
+                <td>152</td>
+                <td>152</td>
+                <td>152</td>
+                <td>152</td>
+                <td colspan="2">當店總時數</td>
+            </tr>
+            <tr class="font-bold">
+                <td colspan="3">時數差異(總時數-應上時數)</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td colspan="2" rowspan="2" class="text-large">912</td>
+            </tr>
+            <tr class="font-bold">
+                <td colspan="3">剩餘可補休時數(hr)</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+            <tr class="font-bold">
+                <td colspan="3">加班時數(hr)</td>
+                <td>36</td>
+                <td>20</td>
+                <td>8</td>
+                <td>14</td>
+                <td>6</td>
+                <td>0</td>
+                <td colspan="2">應排總時數</td>
+            </tr>
+            <tr class="font-bold">
+                <td rowspan="3">班別統計</td>
+                <td colspan="2">早班(次)</td>
+                <td>3</td>
+                <td>2</td>
+                <td>4</td>
+                <td>5</td>
+                <td>5</td>
+                <td>5</td>
+                <td colspan="2" rowspan="3" class="text-large">504</td>
+            </tr>
+            <tr class="font-bold">
+                <td colspan="2">晚班(次)</td>
+                <td>0</td>
+                <td>4</td>
+                <td>6</td>
+                <td>5</td>
+                <td>5</td>
+                <td>7</td>
+            </tr>
+            <tr class="font-bold">
+                <td colspan="2">全班(次)</td>
+                <td>13</td>
+                <td>11</td>
+                <td>9</td>
+                <td>9</td>
+                <td>8</td>
+                <td>6</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</MudContainer>
+
+<!-- 4. 專屬樣式設定 (貼近圖中的 Excel 報表質感) -->
+<style>
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        font-size: 13px;
+        font-family: "Microsoft JhengHei", sans-serif;
+    }
+
+    .schedule-table th, .schedule-table td {
+        border: 1px solid #000;
+        padding: 4px 2px;
+        height: 28px;
+    }
+
+    /* 背景顏色比照原圖 */
+    .bg-yellow {
+        background-color: #FFFFCC !important;
+        color: black;
+    }
+
+    .bg-yellow-dark {
+        background-color: #dfdfa2 !important;
+        color: black !important;
+    }
+
+    .bg-green {
+        background-color: #CCFFCC !important;
+        color: black;
+    }
+
+    .bg-green-dark {
+        background-color: #aee1ae !important;
+        color: black;
+    }
+
+    /* 直立文字 (姓名) */
+    .vertical-text {
+        writing-mode: vertical-lr;
+        text-orientation: upright;
+        letter-spacing: 4px;
+        padding: 8px 4px !important;
+    }
+
+    .font-bold {
+        font-weight: bold;
+    }
+
+    .text-large {
+        font-size: 18px;
+        font-weight: bold;
+    }
+</style>
+
+@code {
+
+    private ShiftCreateTool createTool;
+
+    // 模擬排班資料列
+    private List<ScheduleRowModel> _scheduleRowModels = [];
+    private List<Staff> _staffList;
+    private List<int> _totalHr=[];
+    private string shiftCellClass;
+
+    protected override void OnInitialized()
+    {
+        var dataGetter = new TestDataGetter();
+        createTool = new ShiftCreateTool(dataGetter);
+        _staffList = dataGetter.GetStaffList();
+        var generator = new DcDfsShiftGenerator();
+        var result = createTool.GenerateThisMonthShift(2026, 8, generator);
+
+        // 這裡可以透過 Service 向後端資料庫 (MyProject.Data) 抓資料
+        // 模擬產出 28 天資料
+        var date = result.Context.StartDate;
+        while (date <= result.Context.EndDate)
+        {
+            var schedule = new ScheduleRowModel
+            {
+                DayOfMonth = date.Day,
+                DayOfWeek = _getDayOfWeekName((int)date.DayOfWeek),
+            };
+            foreach (var staff in result.Context.StaffList)
+            {
+                schedule.Shift.Add(_getShiftStr(result.Context, staff.Id, date));
+            }
+
+            _scheduleRowModels.Add(schedule);
+            date = date.AddDays(1);
+        }
+        
+        foreach (var staff in result.Context.StaffList)
+        {
+            _totalHr.Add(result.Context.ShiftState.GetTotalWorkHalfHrs(staff.Id)/2);
+        }
+    }
+
+    private string _getShiftStr(ShiftCreateContext context, int staffId, DateOnly date)
+    {
+        var shiftInfo = context.ShiftState.GetShiftCopy(staffId, date);
+        if (shiftInfo.DayOff)
+        {
+            if (context.PtoData.TryGetValue(date, out var ptoIdList) && ptoIdList.Contains(staffId))
+                return "特6H";
+            return "/";
+        }
+
+        var startHh = shiftInfo.StartArrHalfHr + context.Setting.ShiftStartHalfHr;
+        var start = _getHalfHrShow(startHh);
+        var end = _getHalfHrShow(startHh + shiftInfo.WorkHalfHrs);
+        var back = _getRestHalfHour(shiftInfo.WorkHalfHrs);
+        return $"{start}-{end}{back}";
+    }
+
+    private string _getHalfHrShow(int halfHr)
+    {
+        return $"{(halfHr) / 2:D2}{((halfHr & 1) == 0 ? 0 : 3)}";
+    }
+
+    private string _getDayOfWeekName(int day)
+    {
+        string[] days = ["日", "一", "二", "三", "四", "五", "六"];
+        return days[day];
+    }
+
+    private static string _getRestHalfHour(int workHalfHours)
+    {
+        if (workHalfHours > 17)
+            return "休1";
+        return "休.5";
+    }
+
+    public class ScheduleRowModel
+    {
+        public int DayOfMonth { get; set; }
+        public string DayOfWeek { get; set; } = "";
+        public List<string> Shift { get; set; } = [];
+    }
+
+    private string _getTitleZh(StaffType staffType)
+    {
+        return staffType switch
+        {
+            StaffType.Normal => "專員",
+            StaffType.Manager => "店長",
+            StaffType.Pharmacist => "調劑",
+            _ => throw new ArgumentOutOfRangeException(nameof(staffType), staffType, null)
+        };
+    }
+
+}

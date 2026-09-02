@@ -11,6 +11,7 @@ namespace DasuShiftManager.Core;
 /// </summary>
 public class ShiftCreateTool(IDataGetter dataGetter)
 {
+    public ShiftCreateContext Context { get; set; }
     /// <summary>
     /// 產生指定年月的排班結果。
     /// </summary>
@@ -31,21 +32,9 @@ public class ShiftCreateTool(IDataGetter dataGetter)
         
         var currentDate = new DateOnly(year, month, setting.ShiftStartDay);
         var assignTool = new EveryPossibleAssignTool();
-        var context = new ShiftCreateContext(setting,currentDate,dataGetter);
-        generator.StartGenerate(context,assignTool);
+        Context = new ShiftCreateContext(setting,currentDate,dataGetter);
+        generator.StartGenerate(Context,assignTool);
         
-        return context.GenerateResult();
-    }
-
-    /// <summary>
-    /// 根據工時長度計算員工應該休息的半小時數。
-    /// </summary>
-    /// <param name="workHalfHours">目前已工作的半小時數。</param>
-    /// <param name="setting">排班設定。</param>
-    /// <returns>休息時段的半小時長度。</returns>
-    private static int GetRestHalfHour(int workHalfHours, Setting setting)
-    {
-        if(workHalfHours>=setting.SecondBreakActiveWorkHalfHrs) return setting.SecondBreakDurationHalfHrs;
-        return workHalfHours >= setting.FirstBreakActiveWorkHalfHrs?setting.FirstBreakDurationHalfHrs:0;
+        return Context.GenerateResult();
     }
 }

@@ -15,7 +15,17 @@ public class DcDfsShiftGenerator : IShiftGenerator
         context.ShiftState = new DfsShiftState(context.StartDate, context.EndDate, context.Setting, context.StaffList);
         assignTool.ShiftDfs(context, context.StartDate, context.NextUndoneArrHalfHr(context.StartDate));
         //每日班表組合
-        DcDfsTool.AssignMonthly(context);
+        var tryCount = 0;
+        while (!DcDfsTool.AssignMonthly(context))
+        {
+            tryCount++;
+            if (tryCount > 1000)
+            {
+                Console.WriteLine("嘗試失敗");
+                break;
+            }
+        }
+        Console.WriteLine($"TryCount: {tryCount}");
     }
 }
 
@@ -23,7 +33,7 @@ public static class DcDfsTool
 {
     public static bool AssignMonthly(ShiftCreateContext context)
     {
-        context.EndDate = context.StartDate.AddMonths(1).AddDays(-1);
+        context.EndDate = context.StartDate.AddDays(27);
         context.ShiftState = new DfsShiftState(context.StartDate, context.EndDate, context.Setting, context.StaffList);
         var date = context.StartDate;
 
@@ -90,15 +100,19 @@ public static class DcDfsTool
                         break;
                     }
                     //篩選每周最低排假
-                    var satAndDayOffIs0 = date.DayOfWeek == DayOfWeek.Saturday
-                                          && context.ShiftState.GetVacationsOfCurrentWeek(staffId, date) == 0;
-                    var sunAndDayOffIs1 = date.DayOfWeek == DayOfWeek.Sunday
-                                          && context.ShiftState.GetVacationsOfCurrentWeek(staffId, date) == 1;
-                    if ((satAndDayOffIs0 || sunAndDayOffIs1)
-                        && !staffShift.DayOff)
+                    //須排除無前班表並且排班日還沒5天
+                    if (context.PrevShiftState != null || date.DayNumber-context.StartDate.DayNumber>=5)
                     {
-                        skip = true;
-                        break;
+                        var satAndDayOffIs0 = date.DayOfWeek == DayOfWeek.Saturday
+                                              && context.ShiftState.GetVacationsOfCurrentWeek(staffId, date) == 0;
+                        var sunAndDayOffIs1 = date.DayOfWeek == DayOfWeek.Sunday
+                                              && context.ShiftState.GetVacationsOfCurrentWeek(staffId, date) == 1;
+                        if ((satAndDayOffIs0 || sunAndDayOffIs1)
+                            && !staffShift.DayOff)
+                        {
+                            skip = true;
+                            break;
+                        }
                     }
                 }
 
@@ -148,15 +162,47 @@ public static class DcDfsTool
                     }
                 }
 
-                //todo 目前先用全班 未來可加入計算往後剩餘上班日去導出最低可排時數
-                var maxShiftHalfHr = context.Setting.ShiftHalfHrType.Max();
+                //不足最低時數才需篩選
+                if (minWorkHr < context.Setting.MinMonthWorkHrs*2)
+                {
+                    //todo 目前先用全班 未來可加入計算往後剩餘上班日去導出最低可排時數
+                    var maxShiftHalfHr = context.Setting.ShiftHalfHrType.Max();
+                    foreach (var dailyShift in priorityShift)
+                    {
+                        if (!dailyShift.StaffShifts[targetId].DayOff &&
+                            dailyShift.StaffShifts[targetId].WorkHalfHrs == maxShiftHalfHr)
+                        {
+                            temp.Add(dailyShift);
+                        }
+                    }
+
+                    if (temp.Count > 0)
+                    {
+                        priorityShift.Clear();
+                        priorityShift.AddRange(temp);
+                    }
+
+                    temp.Clear();
+                }
+            }
+            
+            //排除連上四天
+            if (priorityShift.Count > 1)
+            {
                 foreach (var dailyShift in priorityShift)
                 {
-                    if (!dailyShift.StaffShifts[targetId].DayOff &&
-                        dailyShift.StaffShifts[targetId].WorkHalfHrs == maxShiftHalfHr)
+                    var skip = false;
+                    foreach (var staff in context.StaffList)
                     {
-                        temp.Add(dailyShift);
+                        if (context.ShiftState.GetChainWorkDays(staff.Id) == 4 &&
+                            !dailyShift.StaffShifts[staff.Id].DayOff)
+                        {
+                            skip = true;
+                            break;
+                        }
                     }
+                    if(skip) continue;
+                    temp.Add(dailyShift);
                 }
 
                 if (temp.Count > 0)

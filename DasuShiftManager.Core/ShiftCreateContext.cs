@@ -21,7 +21,7 @@ public class ShiftCreateContext
     public IResultSaver ResultSaver { get; set; }
     //單日所有可能
     public List<DailyShift> DailyShift { get;} =[];
-    public IShiftState? PrevShiftState { get; init; }
+    public IShiftState? PrevShiftState { get; init; } = null;
     public Dictionary<int, ShiftInfo?[]> FixedShiftStaff { get; init; }
     
     public Dictionary<int,StaffPreferShift> PreferShift { get; init; }
@@ -58,7 +58,7 @@ public class ShiftCreateContext
     /// <returns>目前已生成的排班結果。</returns>
     public ShiftCreateResult GenerateResult()
     {
-        return new ShiftCreateResult() { ResultCount = IdCount };
+        return new ShiftCreateResult() { ResultCount = IdCount,Context = this};
     }
 
     /// <summary>
@@ -75,13 +75,13 @@ public class ShiftCreateContext
            //排除固定班別員工
            // where !Setting.FixedShiftStaff.ContainsKey(staff.Id)
            //排除排假員工
-           where offStaffIds == null || !offStaffIds.Contains(staff.Id)
+           // where offStaffIds == null || !offStaffIds.Contains(staff.Id)
            //排除連上天數已到上限員工
-           where ShiftState.GetChainWorkDays(staff.Id) < Setting.MaxChainWorkDays
+           // where ShiftState.GetChainWorkDays(staff.Id) < Setting.MaxChainWorkDays
            //排除當日已排班員工
            where !ShiftState.IsStaffAlreadyAssigned(date, staff.Id)
            //排除不符合每周放假天數員工
-           where MatchMinDayOff(date, staff.Id)
+           // where MatchMinDayOff(date, staff.Id)
            select staff
        ];
     }
@@ -148,5 +148,6 @@ public class ShiftCreateContext
 /// </summary>
 public class ShiftCreateResult
 {
-    public int ResultCount { get; set; } = 0;
+    public int ResultCount { get; init; }
+    public ShiftCreateContext Context { get; init; }
 }

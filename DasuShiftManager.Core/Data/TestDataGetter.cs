@@ -97,6 +97,6 @@ public class TestDataGetter:IDataGetter
 
     public Dictionary<DateOnly, List<int>> GetPtoStaffList()
     {
-        throw new NotImplementedException();
+        return [];
     }
 }
