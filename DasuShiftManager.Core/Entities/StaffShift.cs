@@ -71,8 +71,13 @@ public class StaffShift
             throw new InvalidOperationException($"While assign work,date {date.ToShortDateString()} is already assigned");
         if (_monthShift.TryGetValue(date.AddDays(-1), out var shiftInfo)&&(shiftInfo==null||shiftInfo.DayOff)) ChainWorkDays = 0;
         ChainWorkDays++;
-        TotalWorkHalfHrs+=workHalfHrs;
+        TotalWorkHalfHrs+=_getNoRestTimeHalfHrs(workHalfHrs);
         _monthShift[date]=new ShiftInfo(startArrHalfHr,workHalfHrs);
+    }
+
+    private int _getNoRestTimeHalfHrs(int workHalfHrs)
+    {
+        return workHalfHrs>17?workHalfHrs-2:workHalfHrs-1;
     }
 
     /// <summary>
@@ -92,7 +97,7 @@ public class StaffShift
 
         if (!shiftInfo.DayOff)
         {
-            TotalWorkHalfHrs-=shiftInfo.WorkHalfHrs;
+            TotalWorkHalfHrs-=_getNoRestTimeHalfHrs(shiftInfo.WorkHalfHrs);
             //這裡要注意 因為是遞迴呼叫總是最後一步才能這樣扣連續上班日
             ChainWorkDays = Math.Max(0, ChainWorkDays - 1);
         }
@@ -127,7 +132,7 @@ public class StaffShift
     {
         if (!_monthShift.TryGetValue(date, out var shiftInfo)||shiftInfo==null)
             return new ShiftInfo();
-        return new ShiftInfo(){DayOff = shiftInfo.DayOff,StartArrHalfHr = shiftInfo.StartArrHalfHr,WorkHalfHrs = shiftInfo.WorkHalfHrs};
+        return new ShiftInfo(){DayOff = shiftInfo.DayOff,StartArrHalfHr = shiftInfo.StartArrHalfHr,WorkHalfHrs = shiftInfo.WorkHalfHrs,Type=shiftInfo.Type};
     }
 
     public void Assigned(DateOnly date, ShiftInfo shiftInfo)
@@ -140,7 +145,7 @@ public class StaffShift
         else
         {
             ChainWorkDays++;
-            TotalWorkHalfHrs+=shiftInfo.WorkHalfHrs;
+            TotalWorkHalfHrs+=_getNoRestTimeHalfHrs(shiftInfo.WorkHalfHrs);
         }
         _monthShift[date] = shiftInfo;
     }

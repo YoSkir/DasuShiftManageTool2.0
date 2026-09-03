@@ -1,6 +1,7 @@
 ﻿using DasuShiftManager.Core.Entities;
 using DasuShiftManager.Core.GenerateTool.AssignTool;
 using DasuShiftManager.Core.GenerateTool.ResultSaver;
+using DasuShiftManager.Core.Log;
 using DasuShiftManager.Core.Shift;
 
 namespace DasuShiftManager.Core.GenerateTool;
@@ -121,7 +122,11 @@ public static class DcDfsTool
             }
 
             //無符合結果時斷開
-            if (todayAvailableShift.Count == 0) return false;
+            if (todayAvailableShift.Count == 0)
+            {
+                LogTool.Log("失敗原因: 基本篩選無剩餘");
+                return false;
+            }
             //額外篩選:
             var priorityShift = new List<DailyShift>();
             var temp = new List<DailyShift>();
@@ -194,7 +199,7 @@ public static class DcDfsTool
                     var skip = false;
                     foreach (var staff in context.StaffList)
                     {
-                        if (context.ShiftState.GetChainWorkDays(staff.Id) == 4 &&
+                        if (context.ShiftState.GetChainWorkDays(staff.Id) == 3 &&
                             !dailyShift.StaffShifts[staff.Id].DayOff)
                         {
                             skip = true;
@@ -215,8 +220,37 @@ public static class DcDfsTool
             }
             
             //找最少員工連續全班
+            // if (priorityShift.Count > 1)
+            // {
+            //     if (temp.Count > 0)
+            //     {
+            //         priorityShift.Clear();
+            //         priorityShift.AddRange(temp);
+            //     }
+            //
+            //     temp.Clear();
+            // }
+            
+            //早班平均
             if (priorityShift.Count > 1)
             {
+                var targetId = -1;
+                var minEarlyShiftCount = int.MaxValue;
+                foreach (var staffId in context.ShiftType.Early.Keys)
+                {
+                    var earlyShiftCount = context.ShiftType.Early[staffId];
+                    if ( earlyShiftCount< minEarlyShiftCount)
+                    {
+                        minEarlyShiftCount=earlyShiftCount;
+                        targetId = staffId;
+                    }
+                }
+                foreach (var dailyShift in priorityShift)
+                {
+                    if(dailyShift.StaffShifts[targetId].Type!=Entities.ShiftType.Early)
+                        continue;
+                    temp.Add(dailyShift);
+                }
                 if (temp.Count > 0)
                 {
                     priorityShift.Clear();
@@ -225,7 +259,7 @@ public static class DcDfsTool
 
                 temp.Clear();
             }
-
+            
             //結果中隨機排班
             var shift = priorityShift.Count == 0
                 ? _getRandomDailyShift(todayAvailableShift)
@@ -236,16 +270,43 @@ public static class DcDfsTool
             {
                 context.ShiftState.AssignPto(staffId);
             }
+            //班別統計
+            foreach (var staffId in shift.StaffShifts.Keys)
+            {
+                var shiftInfo=shift.StaffShifts[staffId];
+                if(shiftInfo.DayOff) continue;
+                switch (shiftInfo.Type)
+                {
+                    case Entities.ShiftType.Early:
+                        context.ShiftType.Early[staffId]++;
+                        break;
+                    case Entities.ShiftType.Late:
+                        context.ShiftType.Late[staffId]++;
+                        break;
+                    case Entities.ShiftType.All:
+                        context.ShiftType.All[staffId]++;
+                        break;
+                    case Entities.ShiftType.Rest:
+                        break;
+                }
+            }
             date = date.AddDays(1);
         }
 
         //篩選每月時數與休假日
         foreach (var staff in context.StaffList)
         {
-            if(context.ShiftState.GetTotalWorkHalfHrs(staff.Id)<context.Setting.MinMonthWorkHrs*2)
+            if (context.ShiftState.GetTotalWorkHalfHrs(staff.Id) < context.Setting.MinMonthWorkHrs * 2)
+            {
+                LogTool.Log($"失敗原因: {staff.Name} 時數不足:{context.ShiftState.GetTotalWorkHalfHrs(staff.Id)/2}");
                 return false;
-            if(context.ShiftState.GetTotalRestDays(staff.Id)<context.Setting.MinMonthRestDays)
+            }
+
+            if (context.ShiftState.GetTotalRestDays(staff.Id) < context.Setting.MinMonthRestDays)
+            {
+                LogTool.Log($"失敗原因: {staff.Name} 休假不足:{context.ShiftState.GetTotalRestDays(staff.Id)}");
                 return false;
+            }
         }
         return true;
     }

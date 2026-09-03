@@ -23,8 +23,8 @@ public class ShiftCreateContext
     public List<DailyShift> DailyShift { get;} =[];
     public IShiftState? PrevShiftState { get; init; } = null;
     public Dictionary<int, ShiftInfo?[]> FixedShiftStaff { get; init; }
-    
     public Dictionary<int,StaffPreferShift> PreferShift { get; init; }
+    public ShiftType ShiftType { get; init; }
 
 
     /// <summary>
@@ -43,6 +43,13 @@ public class ShiftCreateContext
        StaffList = dataGetter.GetStaffList();
        if(StaffList.Count==0)
            throw new InvalidOperationException("No staff list found");
+       ShiftType = new ShiftType();
+       foreach (var staff in StaffList)
+       {
+           ShiftType.All[staff.Id] = 0;
+           ShiftType.Early[staff.Id] = 0;
+           ShiftType.Late[staff.Id] = 0;
+       }
        FixedShiftStaff=dataGetter.GetFixedShift() ?? [];
        PreferShift = dataGetter.GetPreferShift() ?? [];
        if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)
@@ -156,4 +163,11 @@ public class ShiftCreateResult
 {
     public int ResultCount { get; init; }
     public ShiftCreateContext Context { get; init; }
+}
+
+public class ShiftType
+{
+    public Dictionary<int, int> Early { get; } = [];
+    public Dictionary<int, int> Late { get; } = [];
+    public Dictionary<int, int> All { get; } = [];
 }

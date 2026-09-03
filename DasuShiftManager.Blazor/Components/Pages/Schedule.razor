@@ -86,80 +86,36 @@
                     <td>@hr</td>
                 }
             </tr>
-            </tfoot>
-        </table>
-        <table class="schedule-table">
-            <!-- 3. 底部統計與加總區 (Footer) -->
-            <tbody>
+            <tr class="bg-yellow-dark font-bold">
+                <td colspan="3">總休假</td>
+                @foreach (var day in _totalRest)
+                {
+                    <td>@day</td>
+                }
+            </tr>
             <tr class="bg-yellow font-bold">
-                <td colspan="3">總時數(含所有假別及補休)</td>
-                <td>152</td>
-                <td>152</td>
-                <td>152</td>
-                <td>152</td>
-                <td>152</td>
-                <td>152</td>
-                <td colspan="2">當店總時數</td>
-            </tr>
-            <tr class="font-bold">
-                <td colspan="3">時數差異(總時數-應上時數)</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td colspan="2" rowspan="2" class="text-large">912</td>
-            </tr>
-            <tr class="font-bold">
-                <td colspan="3">剩餘可補休時數(hr)</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-            </tr>
-            <tr class="font-bold">
-                <td colspan="3">加班時數(hr)</td>
-                <td>36</td>
-                <td>20</td>
-                <td>8</td>
-                <td>14</td>
-                <td>6</td>
-                <td>0</td>
-                <td colspan="2">應排總時數</td>
-            </tr>
-            <tr class="font-bold">
                 <td rowspan="3">班別統計</td>
                 <td colspan="2">早班(次)</td>
-                <td>3</td>
-                <td>2</td>
-                <td>4</td>
-                <td>5</td>
-                <td>5</td>
-                <td>5</td>
-                <td colspan="2" rowspan="3" class="text-large">504</td>
+                @foreach (var c in _early)
+                {
+                    <td>@c</td>
+                }
             </tr>
-            <tr class="font-bold">
+            <tr class="bg-yellow font-bold">
                 <td colspan="2">晚班(次)</td>
-                <td>0</td>
-                <td>4</td>
-                <td>6</td>
-                <td>5</td>
-                <td>5</td>
-                <td>7</td>
+                @foreach (var c in _late)
+                {
+                    <td>@c</td>
+                }
             </tr>
-            <tr class="font-bold">
+            <tr class="bg-yellow font-bold">
                 <td colspan="2">全班(次)</td>
-                <td>13</td>
-                <td>11</td>
-                <td>9</td>
-                <td>9</td>
-                <td>8</td>
-                <td>6</td>
+                @foreach (var c in _all)
+                {
+                    <td>@c</td>
+                }
             </tr>
-            </tbody>
+            </tfoot>
         </table>
     </div>
 </MudContainer>
@@ -228,6 +184,10 @@
     private List<Staff> _staffList;
     private List<int> _totalHr=[];
     private string shiftCellClass;
+    private List<int> _totalRest=[];
+    private List<int> _early=[];
+    private List<int> _all=[];
+    private List<int> _late=[];
 
     protected override void OnInitialized()
     {
@@ -259,6 +219,10 @@
         foreach (var staff in result.Context.StaffList)
         {
             _totalHr.Add(result.Context.ShiftState.GetTotalWorkHalfHrs(staff.Id)/2);
+            _totalRest.Add(result.Context.ShiftState.GetTotalRestDays(staff.Id));
+            _early.Add(result.Context.ShiftType.Early[staff.Id]);
+            _late.Add(result.Context.ShiftType.Late[staff.Id]);
+            _all.Add(result.Context.ShiftType.All[staff.Id]);
         }
     }
 
