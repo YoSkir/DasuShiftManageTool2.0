@@ -2,7 +2,7 @@
 
 public class Setting
 {
-    public int ShiftStartDay { get; init; }
+    public int ShiftStartDay { get; set; }
     public int ShiftStartHalfHr { get; init; }
     public int ShiftHalfHrCount { get; init; }
     public int FirstBreakActiveWorkHalfHrs { get; init; }
@@ -15,6 +15,6 @@ public class Setting
     public int[] EveryHalfHrMinManagersOrPharmacist { get; init; }=[];
     public int MaxChainWorkDays { get; init; }
     public int MinWeekRestDays { get; init; }
-    public int MinMonthWorkHrs { get; init; }
-    public int MinMonthRestDays { get; init; }
+    public int MinMonthWorkHrs { get; set; }
+    public int MinMonthRestDays { get; set; }
 }

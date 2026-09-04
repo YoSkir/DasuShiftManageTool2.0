@@ -1,4 +1,5 @@
-﻿using DasuShiftManager.Core.Entities;
+﻿using System.Globalization;
+using DasuShiftManager.Core.Entities;
 using DasuShiftManager.Core.GenerateTool.AssignTool;
 using DasuShiftManager.Core.GenerateTool.ResultSaver;
 // using DasuShiftManager.Core.Log;
@@ -20,13 +21,13 @@ public class DcDfsShiftGenerator : IShiftGenerator
         while (!DcDfsTool.AssignMonthly(context))
         {
             tryCount++;
-            if (tryCount > 1000)
+            if (tryCount > 100)
             {
                 Console.WriteLine("嘗試失敗");
                 throw new Exception();
             }
         }
-        Console.WriteLine($"TryCount: {tryCount}");
+        Console.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)} 排班完成! 嘗試次數: {tryCount}");
     }
 }
 
@@ -296,15 +297,18 @@ public static class DcDfsTool
         //篩選每月時數與休假日
         foreach (var staff in context.StaffList)
         {
-            if (context.ShiftState.GetTotalWorkHalfHrs(staff.Id) < context.Setting.MinMonthWorkHrs * 2)
+            var totalWorkHrs = context.ShiftState.GetTotalWorkHalfHrs(staff.Id);
+            var totalRestDays = context.ShiftState.GetTotalRestDays(staff.Id);
+            if (totalWorkHrs < context.Setting.MinMonthWorkHrs * 2)
             {
-                // LogTool.Log($"失敗原因: {staff.Name} 時數不足:{context.ShiftState.GetTotalWorkHalfHrs(staff.Id)/2}");
+                //計算目前所有能排的工時 如果能達到就修改
+                
                 // return false;
             }
 
-            if (context.ShiftState.GetTotalRestDays(staff.Id) < context.Setting.MinMonthRestDays)
+            if (totalRestDays < context.Setting.MinMonthRestDays)
             {
-                // LogTool.Log($"失敗原因: {staff.Name} 休假不足:{context.ShiftState.GetTotalRestDays(staff.Id)}");
+                //計算目前已排班表 如果能達到休假日並且不影響班表就修改
                 return false;
             }
         }

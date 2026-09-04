@@ -24,6 +24,16 @@ public class ShiftCreateTool(IDataGetter dataGetter)
     {
         var setting = dataGetter.GetSetting();
         if(setting==null) throw new Exception("No settings found");
+        return GenerateThisMonthShift(year, month, generator,setting.ShiftStartDay,setting.MinMonthWorkHrs,setting.MinMonthRestDays);
+    }
+    
+    public ShiftCreateResult GenerateThisMonthShift(int year,int month,IShiftGenerator generator,int day,int minWorkHrs,int minRestDay)
+    {
+        var setting = dataGetter.GetSetting();
+        if(setting==null) throw new Exception("No settings found");
+        setting.ShiftStartDay = day;
+        setting.MinMonthWorkHrs=minWorkHrs;
+        setting.MinMonthRestDays=minRestDay;
         var vacationData = dataGetter.GetVacationStaffList();
         var staffList = dataGetter.GetStaffList();
         if (staffList.Count == 0) throw new Exception("Staff not found");

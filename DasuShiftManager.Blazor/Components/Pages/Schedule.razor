@@ -1,4 +1,4 @@
-﻿@page "/schedule-report"
+﻿@page "/"
 @using System.Collections
 @using System.Globalization
 @using DasuShiftManager.Core
@@ -9,115 +9,128 @@
 
 
 <MudContainer MaxWidth="MaxWidth.False" Style="width: 100%" Class="mt-4">
-
-    <!-- 1. 頂部抬頭資訊區 -->
-    <MudPaper Class="pa-3 mb-2" Color="Color.Primary" Style=" border: 1px solid #111;">
-        <MudGrid Spacing="1" Justify="Justify.SpaceBetween">
-            <MudItem xs="4">
-                <MudText Typo="Typo.h6" Style="font-weight: bold">
-                    2026年 8/2 ～ 8/29 大樹連鎖藥局 ～ 0196仁武中華
-                </MudText>
-            </MudItem>
-            <MudItem xs="4" Class="text-center">
-                <MudText Typo="Typo.h6" Style="font-weight: bold;">
-                    排 定 班 別
-                </MudText>
-            </MudItem>
-            <MudItem xs="4" Class="text-right">
-                <MudText Typo="Typo.h6" Style="font-weight: bold">
-                    應上時數/應休天數：152H / 9天
-                </MudText>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-
-    <!-- 2. 排班主體表格 (Excel Style Table) -->
-    <div style="overflow-x: auto;">
-        <table class="schedule-table">
-            <thead>
-            <!-- 第一層標頭：職級 -->
-            <tr>
-                <th rowspan="3" colspan="2" class="bg-yellow fix-col-2">日期</th>
-                <th colspan="1" class="bg-yellow">職級</th>
-                @foreach (var staff in _staffList)
-                {
-                    <th class="bg-yellow">@_getTitleZh(staff.StaffType)</th>
-                }
-            </tr>
-            <!-- 第三層標頭：姓名與班別標記 -->
-            <tr>
-                <th class="bg-yellow">姓名</th>
-                @foreach (var staff in _staffList)
-                {
-                    <th class="bg-yellow">@staff.Name</th>
-                }
-            </tr>
-            </thead>
-            <tbody>
-            @{ var rowIndex = 0; }
-            @foreach (var row in _scheduleRowModels)
-            {
-                rowIndex++;
-                <tr>
-                    <!-- 綠色行事曆/標籤欄位 -->
-                    @{
-                        shiftCellClass = (rowIndex & 1) == 0 ? "bg-green" : "bg-green-dark";
-                    }
-                    <td class="@shiftCellClass font-bold">@row.DayOfMonth</td>
-                    <td class="@shiftCellClass font-bold">@row.DayOfWeek</td>
-                    @{
-                        shiftCellClass = (rowIndex & 1) == 0 ? "bg-yellow" : "bg-yellow-dark";
-                    }
-                    <td class="@shiftCellClass"></td>
-
-                    <!-- 員工個人排班（資料填寫區） -->
-                    @foreach (var shift in row.Shift)
+    @if (showFailAlert)
+    {
+        <MudAlert Severity="Severity.Warning" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseAlert(true))">排班失敗 請檢查降低所需工時</MudAlert>
+    }
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="10">
+            <div style="overflow-x: auto;">
+                <table class="schedule-table">
+                    <thead>
+                    <!-- 第一層標頭：職級 -->
+                    <tr>
+                        <th rowspan="3" colspan="2" class="bg-yellow fix-col-2">日期</th>
+                        <th colspan="1" class="bg-yellow">職級</th>
+                        @foreach (var staff in _staffList)
+                        {
+                            <th class="bg-yellow">@_getTitleZh(staff.StaffType)</th>
+                        }
+                    </tr>
+                    <!-- 第三層標頭：姓名與班別標記 -->
+                    <tr>
+                        <th class="bg-yellow">姓名</th>
+                        @foreach (var staff in _staffList)
+                        {
+                            <th class="bg-yellow">@staff.Name</th>
+                        }
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @{ var rowIndex = 0; }
+                    @foreach (var row in _scheduleRowModels)
                     {
-                        <td class="@shiftCellClass">@shift</td>
+                        rowIndex++;
+                        <tr>
+                            <!-- 綠色行事曆/標籤欄位 -->
+                            @{
+                                shiftCellClass = (rowIndex & 1) == 0 ? "bg-green" : "bg-green-dark";
+                            }
+                            <td class="@shiftCellClass font-bold">@row.DayOfMonth</td>
+                            <td class="@shiftCellClass font-bold">@row.DayOfWeek</td>
+                            @{
+                                shiftCellClass = (rowIndex & 1) == 0 ? "bg-yellow" : "bg-yellow-dark";
+                            }
+                            <td class="@shiftCellClass"></td>
+
+                            <!-- 員工個人排班（資料填寫區） -->
+                            @foreach (var shift in row.Shift)
+                            {
+                                <td class="@shiftCellClass">@shift</td>
+                            }
+                        </tr>
                     }
-                </tr>
-            }
-            </tbody>
-            <tfoot>
-            <tr class="bg-yellow font-bold">
-                <td colspan="3">總時數(含所有假別及補休)</td>
-                @foreach (var hr in _totalHr)
-                {
-                    <td>@hr</td>
-                }
-            </tr>
-            <tr class="bg-yellow-dark font-bold">
-                <td colspan="3">總休假</td>
-                @foreach (var day in _totalRest)
-                {
-                    <td>@day</td>
-                }
-            </tr>
-            <tr class="bg-yellow font-bold">
-                <td rowspan="3">班別統計</td>
-                <td colspan="2">早班(次)</td>
-                @foreach (var c in _early)
-                {
-                    <td>@c</td>
-                }
-            </tr>
-            <tr class="bg-yellow font-bold">
-                <td colspan="2">晚班(次)</td>
-                @foreach (var c in _late)
-                {
-                    <td>@c</td>
-                }
-            </tr>
-            <tr class="bg-yellow font-bold">
-                <td colspan="2">全班(次)</td>
-                @foreach (var c in _all)
-                {
-                    <td>@c</td>
-                }
-            </tr>
-            </tfoot>
-        </table>
-    </div>
+                    </tbody>
+                    <tfoot>
+                    <tr class="bg-yellow font-bold">
+                        <td colspan="3">總時數(含所有假別及補休)</td>
+                        @foreach (var hr in _totalHr)
+                        {
+                            <td>@hr</td>
+                        }
+                    </tr>
+                    <tr class="bg-yellow-dark font-bold">
+                        <td colspan="3">總休假</td>
+                        @foreach (var day in _totalRest)
+                        {
+                            <td>@day</td>
+                        }
+                    </tr>
+                    <tr class="bg-yellow font-bold">
+                        <td rowspan="3">班別統計</td>
+                        <td colspan="2">早班(次)</td>
+                        @foreach (var c in _early)
+                        {
+                            <td>@c</td>
+                        }
+                    </tr>
+                    <tr class="bg-yellow font-bold">
+                        <td colspan="2">晚班(次)</td>
+                        @foreach (var c in _late)
+                        {
+                            <td>@c</td>
+                        }
+                    </tr>
+                    <tr class="bg-yellow font-bold">
+                        <td colspan="2">全班(次)</td>
+                        @foreach (var c in _all)
+                        {
+                            <td>@c</td>
+                        }
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </MudItem>
+        <MudItem xs="12" md="2">
+            <MudPaper Class="pa-3 mb-2" Color="Color.Primary" Style=" border: 1px solid #111;">
+                <MudGrid Spacing="1" Justify="Justify.SpaceBetween">
+                    @* <MudItem xs="4"> *@
+                    @*     <MudText Typo="Typo.h6" Style="font-weight: bold"> *@
+                    @*         2026年 8/2 ～ 8/29 大樹連鎖藥局 ～ 0196仁武中華 *@
+                    @*     </MudText> *@
+                    @* </MudItem> *@
+                    @* <MudItem xs="4" Class="text-center"> *@
+                    @*     <MudText Typo="Typo.h6" Style="font-weight: bold;"> *@
+                    @*         排 定 班 別 *@
+                    @*     </MudText> *@
+                    @* </MudItem> *@
+                    @* <MudItem xs="4" Class="text-right"> *@
+                    @*     <MudText Typo="Typo.h6" Style="font-weight: bold"> *@
+                    @*         應上時數/應休天數：152H / 9天 *@
+                    @*     </MudText> *@
+                    @* </MudItem> *@
+                    @* <MudTextField @bind-Value="_minWorkHr" Label="最低所需時數" Variant="Variant.Outlined"/> *@
+                    @* <MudTextField @bind-Value="_minRestDay" Label="最低休假日" Variant="Variant.Outlined"/> *@
+                    <MudDatePicker Label="開始日期" @bind-Date="_startDate"/>
+                    <MudButton Variant="Variant.Filled" Color="Color.Tertiary" OnClick="@StartShift" Size="Size.Large" Class="justify-center mt-8">
+                        開始排班
+                    </MudButton>
+                    @* <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@_refreshBtn" OnClick="@Generate">刷新</MudButton> *@
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 </MudContainer>
 
 <!-- 4. 專屬樣式設定 (貼近圖中的 Excel 報表質感) -->
@@ -177,7 +190,7 @@
 
 @code {
 
-    private ShiftCreateTool createTool;
+    private ShiftCreateTool _createTool;
 
     // 模擬排班資料列
     private List<ScheduleRowModel> _scheduleRowModels = [];
@@ -188,42 +201,25 @@
     private List<int> _early=[];
     private List<int> _all=[];
     private List<int> _late=[];
+    private bool _refreshBtn=true;
+    private bool showFailAlert = false;
+
+    private IShiftGenerator _generator;
+    private IDataGetter _dataGetter;
+    private int _minWorkHr;
+    private int _minRestDay;
+    private DateTime? _startDate;
 
     protected override void OnInitialized()
     {
-        var dataGetter = new TestDataGetter();
-        createTool = new ShiftCreateTool(dataGetter);
-        _staffList = dataGetter.GetStaffList();
-        var generator = new DcDfsShiftGenerator();
-        var result = createTool.GenerateThisMonthShift(2026, 8, generator);
-
-        // 這裡可以透過 Service 向後端資料庫 (MyProject.Data) 抓資料
-        // 模擬產出 28 天資料
-        var date = result.Context.StartDate;
-        while (date <= result.Context.EndDate)
-        {
-            var schedule = new ScheduleRowModel
-            {
-                DayOfMonth = date.Day,
-                DayOfWeek = _getDayOfWeekName((int)date.DayOfWeek),
-            };
-            foreach (var staff in result.Context.StaffList)
-            {
-                schedule.Shift.Add(_getShiftStr(result.Context, staff.Id, date));
-            }
-
-            _scheduleRowModels.Add(schedule);
-            date = date.AddDays(1);
-        }
-        
-        foreach (var staff in result.Context.StaffList)
-        {
-            _totalHr.Add(result.Context.ShiftState.GetTotalWorkHalfHrs(staff.Id)/2);
-            _totalRest.Add(result.Context.ShiftState.GetTotalRestDays(staff.Id));
-            _early.Add(result.Context.ShiftType.Early[staff.Id]);
-            _late.Add(result.Context.ShiftType.Late[staff.Id]);
-            _all.Add(result.Context.ShiftType.All[staff.Id]);
-        }
+        _dataGetter = new TestDataGetter();
+        _staffList = _dataGetter.GetStaffList();
+        _createTool = new ShiftCreateTool(_dataGetter);
+        _generator = new DcDfsShiftGenerator();
+        var defaultSetting = _dataGetter.GetSetting();
+        _minWorkHr = defaultSetting.MinMonthWorkHrs;
+        _minRestDay = defaultSetting.MinMonthRestDays;
+        _startDate=DateTime.Now;
     }
 
     private string _getShiftStr(ShiftCreateContext context, int staffId, DateOnly date)
@@ -277,6 +273,67 @@
             StaffType.Pharmacist => "調劑",
             _ => throw new ArgumentOutOfRangeException(nameof(staffType), staffType, null)
         };
+    }
+
+    private void StartShift()
+    {
+        Generate();
+    }
+
+    private Task Generate()
+    {
+        var startDate=DateOnly.FromDateTime(_startDate.Value);
+        ShiftCreateResult result;
+        try
+        {
+            result = _createTool.GenerateThisMonthShift(startDate.Year, startDate.Month, _generator,startDate.Day,_minWorkHr,_minRestDay);
+        }
+        catch (Exception e)
+        {
+            showFailAlert = true;
+            return Task.CompletedTask;
+        }
+        
+        _scheduleRowModels.Clear();
+        _totalHr.Clear();
+        _totalRest.Clear();
+        _early.Clear();
+        _all.Clear();
+        _late.Clear();
+        
+        var date = result.Context.StartDate;
+        while (date <= result.Context.EndDate)
+        {
+            var schedule = new ScheduleRowModel
+            {
+                DayOfMonth = date.Day,
+                DayOfWeek = _getDayOfWeekName((int)date.DayOfWeek),
+            };
+            foreach (var staff in result.Context.StaffList)
+            {
+                schedule.Shift.Add(_getShiftStr(result.Context, staff.Id, date));
+            }
+
+            _scheduleRowModels.Add(schedule);
+            date = date.AddDays(1);
+        }
+        
+        foreach (var staff in result.Context.StaffList)
+        {
+            _totalHr.Add(result.Context.ShiftState.GetTotalWorkHalfHrs(staff.Id)/2);
+            _totalRest.Add(result.Context.ShiftState.GetTotalRestDays(staff.Id));
+            _early.Add(result.Context.ShiftType.Early[staff.Id]);
+            _late.Add(result.Context.ShiftType.Late[staff.Id]);
+            _all.Add(result.Context.ShiftType.All[staff.Id]);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task CloseAlert(bool b)
+    {
+        showFailAlert = false;
+        return Task.CompletedTask;
     }
 
 }

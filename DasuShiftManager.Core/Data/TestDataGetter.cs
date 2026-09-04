@@ -8,7 +8,7 @@ public class TestDataGetter : IDataGetter
     {
         var res = new Setting
         {
-            ShiftStartDay = 2,
+            ShiftStartDay = 27,
             ShiftStartHalfHr = 18,
             ShiftHalfHrCount = 26,
             FirstBreakActiveWorkHalfHrs = 12,
@@ -17,8 +17,8 @@ public class TestDataGetter : IDataGetter
             SecondBreakDurationHalfHrs = 2,
             MaxChainWorkDays = 6,
             MinWeekRestDays = 2,
-            MinMonthWorkHrs = 152,
-            MinMonthRestDays = 9,
+            MinMonthWorkHrs = 144,
+            MinMonthRestDays = 10,
             ShiftHalfHrType = [13, 17, 22, 26],
             EveryHalfHrMinWorkers =
             [
@@ -28,11 +28,11 @@ public class TestDataGetter : IDataGetter
                 2, 2,
                 2, 2,
                 2, 2,
-                2, 3,
-                3, 3,
-                3, 3,
-                3, 3,
-                3, 3,
+                2, 2,
+                2, 2,
+                2, 2,
+                2, 2,
+                2, 2,
                 1, 1,
                 1, 1
             ],
@@ -95,7 +95,19 @@ public class TestDataGetter : IDataGetter
 
     public Dictionary<DateOnly, List<int>> GetVacationStaffList()
     {
-        return [];
+        var res = new Dictionary<DateOnly, List<int>>();
+        res[new DateOnly(2026, 9, 27)] = [5];
+        res[new DateOnly(2026, 9, 28)] = [5];
+        res[new DateOnly(2026, 10, 11)] = [1];
+        res[new DateOnly(2026, 10, 12)] = [1];
+        res[new DateOnly(2026, 10, 13)] = [1];
+        res[new DateOnly(2026, 10, 14)] = [1];
+        res[new DateOnly(2026, 10, 15)] = [1];
+        res[new DateOnly(2026, 10, 16)] = [1];
+        res[new DateOnly(2026, 10, 17)] = [1,3];
+        res[new DateOnly(2026, 10, 18)] = [1,3];
+        res[new DateOnly(2026, 10, 19)] = [3];
+        return res;
     }
 
     public Dictionary<int, ShiftInfo?[]> GetFixedShift()
@@ -117,6 +129,8 @@ public class TestDataGetter : IDataGetter
 
     public Dictionary<DateOnly, List<int>> GetPtoStaffList()
     {
-        return [];
+        var res = new Dictionary<DateOnly, List<int>>();
+        res[new DateOnly(2026, 10, 10)] = [3];
+        return res;
     }
 }
