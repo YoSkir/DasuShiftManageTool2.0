@@ -12,8 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DasuShiftManager.Shared", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DasuShiftManager.Test", "DasuShiftManager.Test\DasuShiftManager.Test.csproj", "{6C7CA5EB-B899-4E5F-B372-CB53A11FBEE9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DasuShiftManager.WASM", "DasuShiftManager.WASM\DasuShiftManager.WASM.csproj", "{CED4658A-E499-49D0-AED6-3548D798E0F6}"
-EndProject
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
