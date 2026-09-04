@@ -123,8 +123,16 @@
                     @* <MudTextField @bind-Value="_minWorkHr" Label="最低所需時數" Variant="Variant.Outlined"/> *@
                     @* <MudTextField @bind-Value="_minRestDay" Label="最低休假日" Variant="Variant.Outlined"/> *@
                     <MudDatePicker Label="開始日期" @bind-Date="_startDate"/>
-                    <MudButton Variant="Variant.Filled" Color="Color.Tertiary" OnClick="@StartShift" Size="Size.Large" Class="justify-center mt-8">
-                        開始排班
+                    <MudButton Disabled="@_processing" Variant="Variant.Filled" Color="Color.Tertiary" OnClick="@StartShift" Size="Size.Large" Class="justify-center mt-8">
+                        @if (_processing)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                            <MudText Class="ms-2">排班中</MudText>
+                        }
+                        else
+                        {
+                            <MudText>開始排班</MudText>
+                        }
                     </MudButton>
                     @* <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@_refreshBtn" OnClick="@Generate">刷新</MudButton> *@
                 </MudGrid>
@@ -209,6 +217,7 @@
     private int _minWorkHr;
     private int _minRestDay;
     private DateTime? _startDate;
+    private bool _processing;
 
     protected override void OnInitialized()
     {
@@ -282,6 +291,7 @@
 
     private Task Generate()
     {
+        _processing = true;
         var startDate=DateOnly.FromDateTime(_startDate.Value);
         ShiftCreateResult result;
         try
@@ -291,6 +301,7 @@
         catch (Exception e)
         {
             showFailAlert = true;
+            _processing = false;
             return Task.CompletedTask;
         }
         
@@ -327,6 +338,7 @@
             _all.Add(result.Context.ShiftType.All[staff.Id]);
         }
 
+        _processing = false;
         return Task.CompletedTask;
     }
 
