@@ -1,7 +1,7 @@
 ﻿using DasuShiftManager.Core.Entities;
 using DasuShiftManager.Core.GenerateTool.AssignTool;
 using DasuShiftManager.Core.GenerateTool.ResultSaver;
-using DasuShiftManager.Core.Log;
+// using DasuShiftManager.Core.Log;
 using DasuShiftManager.Core.Shift;
 
 namespace DasuShiftManager.Core.GenerateTool;
@@ -124,7 +124,7 @@ public static class DcDfsTool
             //無符合結果時斷開
             if (todayAvailableShift.Count == 0)
             {
-                LogTool.Log("失敗原因: 基本篩選無剩餘");
+                // LogTool.Log("失敗原因: 基本篩選無剩餘");
                 return false;
             }
             //額外篩選:
@@ -298,13 +298,13 @@ public static class DcDfsTool
         {
             if (context.ShiftState.GetTotalWorkHalfHrs(staff.Id) < context.Setting.MinMonthWorkHrs * 2)
             {
-                LogTool.Log($"失敗原因: {staff.Name} 時數不足:{context.ShiftState.GetTotalWorkHalfHrs(staff.Id)/2}");
-                return false;
+                // LogTool.Log($"失敗原因: {staff.Name} 時數不足:{context.ShiftState.GetTotalWorkHalfHrs(staff.Id)/2}");
+                // return false;
             }
 
             if (context.ShiftState.GetTotalRestDays(staff.Id) < context.Setting.MinMonthRestDays)
             {
-                LogTool.Log($"失敗原因: {staff.Name} 休假不足:{context.ShiftState.GetTotalRestDays(staff.Id)}");
+                // LogTool.Log($"失敗原因: {staff.Name} 休假不足:{context.ShiftState.GetTotalRestDays(staff.Id)}");
                 return false;
             }
         }
