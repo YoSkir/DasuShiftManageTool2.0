@@ -108,26 +108,10 @@ public class DfsShiftState :IShiftState
     /// <param name="staffId">員工識別碼。</param>
     /// <param name="date">用於定位週期的日期。</param>
     /// <returns>該週已休假的天數。</returns>
-    public int GetVacationsOfCurrentWeek(int staffId, DateOnly date)
+    public int GetRestDaysOfCurrentWeek(int staffId, DateOnly date)
     {
         var shiftInfo = _getStaffShift(staffId);
         return shiftInfo.GetThisWeekDayOff(date);
-        // var c = 0;
-        // var getDate = date;
-        //
-        // if (getDate.DayOfWeek == DayOfWeek.Sunday)
-        // {
-        //     if (shiftInfo.IsDayOff(getDate)) c++;
-        //     getDate=getDate.AddDays(-1);
-        // }
-        //
-        // while (getDate.DayOfWeek != DayOfWeek.Sunday)
-        // {
-        //     if (shiftInfo.IsDayOff(getDate)) c++;
-        //     getDate=getDate.AddDays(-1);
-        // }
-        //
-        // return c;
     }
 
     public int GetWorkHalfHrs(int staffId, DateOnly date, int countDays)
@@ -147,15 +131,18 @@ public class DfsShiftState :IShiftState
         return _getStaffShift(staffId).GetShiftCopy(date);
     }
 
-    public void AssignShift(Dictionary<int, ShiftInfo> shiftStaffShifts, DateOnly date)
+    public void AssignShift(int staffId,DateOnly date,ShiftInfo shiftInfo)
     {
-        foreach (var staffId in shiftStaffShifts.Keys)
+        var hhsc = _getDailyHHSC(date);
+        if(shiftInfo.DayOff)
+            _getStaffShift(staffId).AssignedDayOff(date);
+        else
         {
-            var shiftInfo=shiftStaffShifts[staffId];
-            if(shiftInfo.DayOff)
-                _getStaffShift(staffId).AssignedDayOff(date);
-            else
-                _getStaffShift(staffId).Assigned(date, shiftInfo);
+            _getStaffShift(staffId).Assigned(date, shiftInfo);
+            for (var i = 0; i < shiftInfo.WorkHalfHrs; i++)
+            {
+                hhsc[shiftInfo.StartArrHalfHr + i]++;
+            }
         }
     }
 
@@ -221,6 +208,17 @@ public class DfsShiftState :IShiftState
         var shiftInfo=_getStaffShift(lastMove.StaffId).Unassigned(lastMove.Date);
         if(shiftInfo.DayOff) return;
         var hhsc = _getDailyHHSC(lastMove.Date);
+        for (var i = 0; i < shiftInfo.WorkHalfHrs; i++)
+        {
+            hhsc[shiftInfo.StartArrHalfHr + i]--;
+        }
+    }
+
+    public void UnassignStaff(DateOnly date, int staffId)
+    {
+        var shiftInfo = _getStaffShift(staffId).Unassigned(date);
+        if(shiftInfo.DayOff) return;
+        var hhsc = _getDailyHHSC(date);
         for (var i = 0; i < shiftInfo.WorkHalfHrs; i++)
         {
             hhsc[shiftInfo.StartArrHalfHr + i]--;

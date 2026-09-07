@@ -33,8 +33,8 @@ public class TestDataGetter : IDataGetter
                 2, 2,
                 2, 2,
                 2, 2,
-                1, 1,
-                1, 1
+                2, 2,
+                2, 2
             ],
             EveryHalfHrMaxWorkers =
             [
@@ -108,6 +108,11 @@ public class TestDataGetter : IDataGetter
         res[new DateOnly(2026, 10, 18)] = [1,3];
         res[new DateOnly(2026, 10, 19)] = [3];
         return res;
+    }
+
+    public Dictionary<int, Dictionary<DateOnly, ShiftInfo>> GetAssignedShiftList()
+    {
+        return [];
     }
 
     public Dictionary<int, ShiftInfo?[]> GetFixedShift()

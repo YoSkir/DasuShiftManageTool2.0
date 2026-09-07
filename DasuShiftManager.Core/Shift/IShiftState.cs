@@ -39,6 +39,8 @@ public interface IShiftState
     /// </summary>
     void UnassignStaff();
 
+    void UnassignStaff(DateOnly date,int staffId);
+
     /// <summary>
     /// 判斷指定員工在某日是否已經安排班表。
     /// </summary>
@@ -60,11 +62,11 @@ public interface IShiftState
     /// <param name="staffId">員工識別碼。</param>
     /// <param name="date">用來決定週期範圍的日期。</param>
     /// <returns>該週內已排假次數。</returns>
-    int GetVacationsOfCurrentWeek(int staffId, DateOnly date);
+    int GetRestDaysOfCurrentWeek(int staffId, DateOnly date);
 
     int GetWorkHalfHrs(int staffId, DateOnly date, int countDays);
     ShiftInfo GetShiftCopy(int staffId, DateOnly date);
-    void AssignShift(Dictionary<int, ShiftInfo> shiftStaffShifts, DateOnly date);
+    void AssignShift(int staffId,DateOnly date,ShiftInfo shiftInfo);
     int GetTotalWorkHalfHrs(int staffId);
     int GetTotalRestDays(int staffId);
     void AssignPto(int staffId);

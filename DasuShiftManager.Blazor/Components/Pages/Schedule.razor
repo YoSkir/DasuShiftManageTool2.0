@@ -120,8 +120,8 @@
                     @*         應上時數/應休天數：152H / 9天 *@
                     @*     </MudText> *@
                     @* </MudItem> *@
-                    @* <MudTextField @bind-Value="_minWorkHr" Label="最低所需時數" Variant="Variant.Outlined"/> *@
-                    @* <MudTextField @bind-Value="_minRestDay" Label="最低休假日" Variant="Variant.Outlined"/> *@
+                    <MudTextField @bind-Value="_minWorkHr" Label="最低所需時數" Variant="Variant.Outlined"/>
+                    <MudTextField @bind-Value="_minRestDay" Label="最低休假日" Variant="Variant.Outlined"/>
                     <MudDatePicker Label="開始日期" @bind-Date="_startDate"/>
                     <MudButton Disabled="@_processing" Variant="Variant.Filled" Color="Color.Tertiary" OnClick="@StartShift" Size="Size.Large" Class="justify-center mt-8">
                         @if (_processing)

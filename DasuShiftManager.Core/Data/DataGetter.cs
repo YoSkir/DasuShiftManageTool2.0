@@ -16,6 +16,11 @@ public class DataGetter:IDataGetter
         return new();
     }
 
+    public Dictionary<int, Dictionary<DateOnly, ShiftInfo>> GetAssignedShiftList()
+    {
+        throw new NotImplementedException();
+    }
+
     public Dictionary<int, ShiftInfo?[]> GetFixedShift()
     {
         throw new NotImplementedException();

@@ -25,6 +25,11 @@ public class PrevShiftState:IShiftState
         throw new NotImplementedException();
     }
 
+    public void UnassignStaff(DateOnly date, int staffId)
+    {
+        throw new NotImplementedException();
+    }
+
     public bool IsStaffAlreadyAssigned(DateOnly date, int staffId)
     {
         throw new NotImplementedException();
@@ -35,7 +40,7 @@ public class PrevShiftState:IShiftState
         throw new NotImplementedException();
     }
 
-    public int GetVacationsOfCurrentWeek(int staffId, DateOnly date)
+    public int GetRestDaysOfCurrentWeek(int staffId, DateOnly date)
     {
         throw new NotImplementedException();
     }
@@ -50,7 +55,7 @@ public class PrevShiftState:IShiftState
         throw new NotImplementedException();
     }
 
-    public void AssignShift(Dictionary<int, ShiftInfo> shiftStaffShifts, DateOnly date)
+    public void AssignShift(int staffId, DateOnly date, ShiftInfo shiftInfo)
     {
         throw new NotImplementedException();
     }

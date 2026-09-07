@@ -25,6 +25,7 @@ public class ShiftCreateContext
     public Dictionary<int, ShiftInfo?[]> FixedShiftStaff { get; init; }
     public Dictionary<int,StaffPreferShift> PreferShift { get; init; }
     public ShiftType ShiftType { get; init; }
+    public Dictionary<int, Dictionary<DateOnly, ShiftInfo>> AssignedShift { get; set; }
 
 
     /// <summary>
@@ -40,16 +41,12 @@ public class ShiftCreateContext
        Setting = setting;
        PtoData = dataGetter.GetPtoStaffList();
        VacationData = dataGetter.GetVacationStaffList();
+       AssignedShift = dataGetter.GetAssignedShiftList();
        StaffList = dataGetter.GetStaffList();
        if(StaffList.Count==0)
            throw new InvalidOperationException("No staff list found");
        ShiftType = new ShiftType();
-       foreach (var staff in StaffList)
-       {
-           ShiftType.All[staff.Id] = 0;
-           ShiftType.Early[staff.Id] = 0;
-           ShiftType.Late[staff.Id] = 0;
-       }
+       ClearShiftTypeCount();
        FixedShiftStaff=dataGetter.GetFixedShift() ?? [];
        PreferShift = dataGetter.GetPreferShift() ?? [];
        if (setting.ShiftHalfHrType == null || setting.ShiftHalfHrType.Count == 0)
@@ -57,6 +54,16 @@ public class ShiftCreateContext
        IdCount = 0;
        if (setting.EveryHalfHrMinWorkers.Length != setting.ShiftHalfHrCount)
            throw new InvalidOperationException("EveryHalfHrMinWorkers is not equal to half hr count");
+    }
+
+    public void ClearShiftTypeCount()
+    {
+        foreach (var staff in StaffList)
+        {
+            ShiftType.All[staff.Id] = 0;
+            ShiftType.Early[staff.Id] = 0;
+            ShiftType.Late[staff.Id] = 0;
+        }
     }
 
     /// <summary>
@@ -123,8 +130,8 @@ public class ShiftCreateContext
        //每周檢查是否符合一周假天數 基本上台灣勞基法是一周兩天 未來可能三天 所以目前直接寫死兩天判斷
        return date.DayOfWeek switch
        {
-           DayOfWeek.Saturday => ShiftState.GetVacationsOfCurrentWeek(staffId, date) >= 1,
-           DayOfWeek.Sunday => ShiftState.GetVacationsOfCurrentWeek(staffId, date) >= 2,
+           DayOfWeek.Saturday => ShiftState.GetRestDaysOfCurrentWeek(staffId, date) >= 1,
+           DayOfWeek.Sunday => ShiftState.GetRestDaysOfCurrentWeek(staffId, date) >= 2,
            _ => true
        };
     }
@@ -150,9 +157,74 @@ public class ShiftCreateContext
         return Setting.ShiftHalfHrCount;
     }
 
+    public AssignableHrInfo GetAssignableHrInfo(DateOnly date)
+    {
+        var index = Setting.ShiftHalfHrCount;
+        var count = 0;
+        for (var i = 0; i < Setting.ShiftHalfHrCount; i++)
+        {
+            var currentWorkers = ShiftState.GetArrHalfHrAssignedStaffCount(date, i);
+            var maxWorkers = Setting.EveryHalfHrMaxWorkers[i];
+            if (maxWorkers > currentWorkers)
+            {
+                index=i;
+                count++;
+                break;
+            }
+        }
+        for (var i = index+1; i < Setting.ShiftHalfHrCount; i++)
+        {
+            var currentWorkers = ShiftState.GetArrHalfHrAssignedStaffCount(date, i);
+            var maxWorkers = Setting.EveryHalfHrMaxWorkers[i];
+            if (maxWorkers <= currentWorkers)
+            {
+                break;
+            }
+
+            count++;
+        }
+
+        return new AssignableHrInfo(){Date = date,UndoneArrHalfHr = index,UndoneHalfHrCount = count};
+    }
+
     public ShiftInfo GetShiftCopy(int staffId,DateOnly date)
     {
         return ShiftState.GetShiftCopy(staffId,date);
+    }
+
+    public void AssignShift(Dictionary<int, ShiftInfo> shiftStaffShifts, DateOnly date)
+    {
+        foreach (var staffId in shiftStaffShifts.Keys)
+        {
+            var info=shiftStaffShifts[staffId];
+            AssignStaff(staffId, date, info);
+        }
+    }
+
+    public void AssignStaff(int staffId,DateOnly date,ShiftInfo shiftInfo)
+    {
+        switch (shiftInfo.Type)
+        {
+            case Entities.ShiftType.Early:
+                ShiftType.Early[staffId]++;
+                break;
+            case Entities.ShiftType.Late:
+                ShiftType.Late[staffId]++;
+                break;
+            case Entities.ShiftType.All:
+                ShiftType.All[staffId]++;
+                break;
+            case Entities.ShiftType.Rest:
+                break;
+        }
+        ShiftState.AssignShift(staffId,date,shiftInfo);
+    }
+
+    public void RefreshUndoneInfo(AssignableHrInfo assignableHrInfo)
+    {
+        var newUndone = GetAssignableHrInfo(assignableHrInfo.Date);
+        assignableHrInfo.UndoneHalfHrCount=newUndone.UndoneHalfHrCount;
+        assignableHrInfo.UndoneArrHalfHr=newUndone.UndoneArrHalfHr; 
     }
 }
 
@@ -170,4 +242,11 @@ public class ShiftType
     public Dictionary<int, int> Early { get; } = [];
     public Dictionary<int, int> Late { get; } = [];
     public Dictionary<int, int> All { get; } = [];
+}
+
+public class AssignableHrInfo
+{
+    public DateOnly Date { get; init; }
+    public int UndoneArrHalfHr { get; set; }
+    public int UndoneHalfHrCount { get; set; }
 }
