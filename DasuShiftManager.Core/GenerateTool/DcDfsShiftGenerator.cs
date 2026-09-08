@@ -23,7 +23,7 @@ public class DcDfsShiftGenerator : IShiftGenerator
         while (!DcDfsTool.AssignMonthly(context))
         {
             tryCount++;
-            if (tryCount > 200)
+            if (tryCount > 500)
             {
                 Console.WriteLine("嘗試失敗");
                 throw new Exception("嘗試失敗");
@@ -54,116 +54,12 @@ public static class DcDfsTool
                     context.PrevShiftState.GetRestDaysOfCurrentWeek(staff.Id, date));
             }
         }
-        
+
         while (date <= context.EndDate)
         {
-            var todayAvailableShift = new List<DailyShift>();
-            var intDayOfWeek = (int)date.DayOfWeek;
             //指定篩選:
-            HashSet<int> dayOffStaff = [.. context.VacationData.TryGetValue(date, out var list) ? list : []];
             HashSet<int> ptoStaff = [.. context.PtoData.TryGetValue(date, out var ptoList) ? ptoList : []];
-            foreach (var dailyShift in context.DailyShift)
-            {
-                //是否符合最低人數
-                if (context.WeekHalfHrWorkers[date.DayOfWeek].EveryHalfHrMinWorkers
-                    .Where((v, i) => dailyShift.StaffCount[i] < v).Any()) continue;
-                
-                var skip = false;
-                foreach (var staffId in dailyShift.StaffShifts.Keys)
-                {
-                    var staffShift = dailyShift.StaffShifts[staffId];
-                    //用於固定班員工 如果有指定排，就不用看固定班設定
-                    var assigned = false;
-                    //篩選劃假
-                    if (dayOffStaff.Contains(staffId))
-                    {
-                        assigned = true;
-                        if (!staffShift.DayOff)
-                        {
-                            skip = true;
-                            break;
-                        }
-                    }
-
-                    //特休
-                    if (ptoStaff.Contains(staffId))
-                    {
-                        assigned = true;
-                        if (!staffShift.DayOff)
-                        {
-                            skip = true;
-                            break;
-                        }
-                    }
-
-                    //篩選指定班
-                    if (context.AssignedShift.TryGetValue(staffId, out var assignedShift)
-                        && assignedShift.TryGetValue(date, out var shiftInfo))
-                    {
-                        assigned = true;
-                        if (staffShift.StartArrHalfHr != shiftInfo.StartArrHalfHr ||
-                            staffShift.WorkHalfHrs != shiftInfo.WorkHalfHrs)
-                        {
-                            skip = true;
-                            break;
-                        }
-                    }
-
-                    //篩選固定班
-                    if (!assigned && context.FixedShiftStaff.TryGetValue(staffId, out var fixedShift))
-                    {
-                        var todayFixedShift = fixedShift[intDayOfWeek];
-                        if (todayFixedShift != null)
-                        {
-                            if (todayFixedShift.DayOff)
-                            {
-                                if (!staffShift.DayOff)
-                                {
-                                    skip = true;
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                if (todayFixedShift.StartArrHalfHr != staffShift.StartArrHalfHr
-                                    || todayFixedShift.WorkHalfHrs != staffShift.WorkHalfHrs)
-                                {
-                                    skip = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    //篩選最高連上天數
-                    if (context.ShiftState.GetChainWorkDays(staffId) == context.Setting.MaxChainWorkDays &&
-                        !staffShift.DayOff)
-                    {
-                        skip = true;
-                        break;
-                    }
-
-                    //篩選每周最低排假
-                    //須排除無前班表並且排班日還沒5天
-                    if (context.PrevShiftState != null || date.DayNumber - context.StartDate.DayNumber >= 5)
-                    {
-                        var satAndDayOffIs0 = date.DayOfWeek == DayOfWeek.Saturday
-                                              && context.ShiftState.GetRestDaysOfCurrentWeek(staffId, date) == 0;
-                        var sunAndDayOffIs1 = date.DayOfWeek == DayOfWeek.Sunday
-                                              && context.ShiftState.GetRestDaysOfCurrentWeek(staffId, date) == 1;
-                        if ((satAndDayOffIs0 || sunAndDayOffIs1)
-                            && !staffShift.DayOff)
-                        {
-                            skip = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (skip) continue;
-                todayAvailableShift.Add(dailyShift);
-            }
-
+            var todayAvailableShift = BasicFilter(context,date,ptoStaff);
             //無符合結果時斷開
             if (todayAvailableShift.Count == 0)
             {
@@ -174,8 +70,8 @@ public static class DcDfsTool
 
             //結果中隨機排班
             var shift = priorityShift.Count == 0
-                ? _getRandomDailyShift(todayAvailableShift)
-                : _getRandomDailyShift(priorityShift);
+                ? GetRandomDailyShift(todayAvailableShift)
+                : GetRandomDailyShift(priorityShift);
             context.AssignShift(shift.StaffShifts, date);
             //特休捕時數
             foreach (var staffId in ptoStaff)
@@ -192,7 +88,7 @@ public static class DcDfsTool
         while (date <= context.EndDate)
         {
             var info = context.GetAssignableHrInfo(date);
-            if (info.UndoneHalfHrCount>0)
+            if (info.UndoneHalfHrCount > 0)
                 editableShiftDate.Add(info);
             date = date.AddDays(1);
         }
@@ -216,7 +112,7 @@ public static class DcDfsTool
             ];
             //嘗試把多餘排假排班
             var totalRestDays = context.ShiftState.GetTotalRestDays(staff.Id);
-            if (totalRestDays>context.Setting.MinMonthRestDays)
+            if (totalRestDays > context.Setting.MinMonthRestDays)
             {
                 staffEditableDate =
                     [.. staffEditableDate.Where(d => d.UndoneHalfHrCount >= context.Setting.ShiftHalfHrType.Min())];
@@ -256,15 +152,17 @@ public static class DcDfsTool
                         totalWorkHrs += undoneHrInfo.UndoneHalfHrCount;
                         context.RefreshUndoneInfo(undoneHrInfo);
                         totalRestDays--;
-                        if (totalWorkHrs >= context.Setting.MinMonthWorkHrs * 2||totalRestDays<=context.Setting.MinMonthRestDays) break;
+                        if (totalWorkHrs >= context.Setting.MinMonthWorkHrs * 2 ||
+                            totalRestDays <= context.Setting.MinMonthRestDays) break;
                     }
                     else if (continueWorkDay == 4) fourDaysCandidate.Add(undoneHrInfo);
                 }
-                if(totalWorkHrs >= context.Setting.MinMonthWorkHrs * 2) continue;
-                if (totalRestDays>context.Setting.MinMonthRestDays)
+
+                if (totalWorkHrs >= context.Setting.MinMonthWorkHrs * 2) continue;
+                if (totalRestDays > context.Setting.MinMonthRestDays)
                 {
                     foreach (var undoneHrInfo in fourDaysCandidate
-                                 .Where(info=>context.ShiftState.GetRestDaysOfCurrentWeek(staff.Id, info.Date) < 3))
+                                 .Where(info => context.ShiftState.GetRestDaysOfCurrentWeek(staff.Id, info.Date) < 3))
                     {
                         context.ShiftState.UnassignStaff(undoneHrInfo.Date, staff.Id);
                         context.AssignStaff(staff.Id, undoneHrInfo.Date,
@@ -272,12 +170,14 @@ public static class DcDfsTool
                         totalWorkHrs += undoneHrInfo.UndoneHalfHrCount;
                         context.RefreshUndoneInfo(undoneHrInfo);
                         totalRestDays--;
-                        if (totalWorkHrs >= context.Setting.MinMonthWorkHrs * 2||totalRestDays<=context.Setting.MinMonthRestDays) break;
+                        if (totalWorkHrs >= context.Setting.MinMonthWorkHrs * 2 ||
+                            totalRestDays <= context.Setting.MinMonthRestDays) break;
                     }
                 }
             }
+
             if (totalWorkHrs >= context.Setting.MinMonthWorkHrs * 2) continue;
-            
+
             //加長不變更班別 延長6小班或10小班
             foreach (var undoneHrInfo in staffEditableDate)
             {
@@ -295,10 +195,12 @@ public static class DcDfsTool
                     totalWorkHrs += 4;
                     context.RefreshUndoneInfo(undoneHrInfo);
                 }
+
                 if (totalWorkHrs >= context.Setting.MinMonthWorkHrs * 2) break;
             }
-            if(totalWorkHrs >= context.Setting.MinMonthWorkHrs * 2 ) continue;
-            
+
+            if (totalWorkHrs >= context.Setting.MinMonthWorkHrs * 2) continue;
+
             //嘗試把短班換成長班
             // staffEditableDate = [..staffEditableDate.Where(info=>info.UndoneHalfHrCount>0)];
             // foreach (var undoneHrInfo in staffEditableDate)
@@ -307,7 +209,7 @@ public static class DcDfsTool
             //     if(shiftInfo.DayOff) continue;
             //     
             // }
-            
+
             if (totalWorkHrs < context.Setting.MinMonthWorkHrs * 2) return false;
         }
 
@@ -321,10 +223,121 @@ public static class DcDfsTool
                 return false;
             }
         }
+
         return true;
     }
 
-    private static DailyShift _getRandomDailyShift(List<DailyShift> results)
+    public static List<DailyShift> BasicFilter(ShiftCreateContext context, DateOnly date, HashSet<int> ptoStaff)
+    {
+        var intDayOfWeek = (int)date.DayOfWeek;
+        HashSet<int> dayOffStaff = [.. context.VacationData.TryGetValue(date, out var list) ? list : []];
+        var res = new List<DailyShift>();
+        foreach (var dailyShift in context.DailyShift)
+        {
+            //是否符合最低人數
+            if (context.WeekHalfHrWorkers[date.DayOfWeek].EveryHalfHrMinWorkers
+                .Where((v, i) => dailyShift.StaffCount[i] < v).Any()) continue;
+
+            var skip = false;
+            foreach (var staffId in dailyShift.StaffShifts.Keys)
+            {
+                var staffShift = dailyShift.StaffShifts[staffId];
+                //用於固定班員工 如果有指定排，就不用看固定班設定
+                var assigned = false;
+                //篩選劃假
+                if (dayOffStaff.Contains(staffId))
+                {
+                    assigned = true;
+                    if (!staffShift.DayOff)
+                    {
+                        skip = true;
+                        break;
+                    }
+                }
+
+                //特休
+                if (ptoStaff.Contains(staffId))
+                {
+                    assigned = true;
+                    if (!staffShift.DayOff)
+                    {
+                        skip = true;
+                        break;
+                    }
+                }
+
+                //篩選指定班
+                if (context.AssignedShift.TryGetValue(staffId, out var assignedShift)
+                    && assignedShift.TryGetValue(date, out var shiftInfo))
+                {
+                    assigned = true;
+                    if (staffShift.StartArrHalfHr != shiftInfo.StartArrHalfHr ||
+                        staffShift.WorkHalfHrs != shiftInfo.WorkHalfHrs)
+                    {
+                        skip = true;
+                        break;
+                    }
+                }
+
+                //篩選固定班
+                if (!assigned && context.FixedShiftStaff.TryGetValue(staffId, out var fixedShift))
+                {
+                    var todayFixedShift = fixedShift[intDayOfWeek];
+                    if (todayFixedShift != null)
+                    {
+                        if (todayFixedShift.DayOff)
+                        {
+                            if (!staffShift.DayOff)
+                            {
+                                skip = true;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if (todayFixedShift.StartArrHalfHr != staffShift.StartArrHalfHr
+                                || todayFixedShift.WorkHalfHrs != staffShift.WorkHalfHrs)
+                            {
+                                skip = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                //篩選最高連上天數
+                if (context.ShiftState.GetChainWorkDays(staffId) == context.Setting.MaxChainWorkDays &&
+                    !staffShift.DayOff)
+                {
+                    skip = true;
+                    break;
+                }
+
+                //篩選每周最低排假
+                //須排除無前班表並且排班日還沒5天
+                if (context.PrevShiftState != null || date.DayNumber - context.StartDate.DayNumber >= 5)
+                {
+                    var satAndDayOffIs0 = date.DayOfWeek == DayOfWeek.Saturday
+                                          && context.ShiftState.GetRestDaysOfCurrentWeek(staffId, date) == 0;
+                    var sunAndDayOffIs1 = date.DayOfWeek == DayOfWeek.Sunday
+                                          && context.ShiftState.GetRestDaysOfCurrentWeek(staffId, date) == 1;
+                    if ((satAndDayOffIs0 || sunAndDayOffIs1)
+                        && !staffShift.DayOff)
+                    {
+                        skip = true;
+                        break;
+                    }
+                }
+            }
+
+            if (skip) continue;
+            res.Add(dailyShift);
+        }
+
+        return res;
+    }
+
+    public static DailyShift GetRandomDailyShift(List<DailyShift> results)
     {
         return results[Random.Shared.Next(0, results.Count)];
     }

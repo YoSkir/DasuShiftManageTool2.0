@@ -17,6 +17,79 @@ public class Tests
     }
 
     [Test]
+    public void WeightScoreTest()
+    {
+        var dataGetter = new TestDataGetter();
+        var setting = dataGetter.GetSetting();
+        setting.ShiftStartDay = 27;
+        setting.MinMonthWorkHrs=144;
+        setting.MinMonthRestDays=10;
+        var currentDate = new DateOnly(2026, 9, setting.ShiftStartDay);
+        var assignTool = new EveryPossibleAssignTool();
+        var context = new ShiftCreateContext(setting,currentDate,dataGetter)
+        {
+            ResultSaver = new DcDfsResultSaver()
+        };
+        context.EndDate = context.StartDate;
+        context.ShiftState = new DfsShiftState(context.StartDate, context.EndDate, context.Setting, context.StaffList);
+        assignTool.ShiftDfs(context, context.StartDate, context.NextUndoneArrHalfHr(context.StartDate));
+        context.Filter = new WeightedFilter();
+        var count = Enum.GetValues<WeightType>().ToDictionary(t => t, t => 0);
+        for (var i = 0; i < 1; i++)
+        {
+            var retries = 0;
+            context.EndDate = context.StartDate.AddDays(27);
+            context.ShiftState = new DfsShiftState(context.StartDate, context.EndDate, context.Setting, context.StaffList);
+            context.ClearShiftTypeCount();
+            var date = context.StartDate;
+            while (date <= context.EndDate)
+            {
+                HashSet<int> ptoStaff = [.. context.PtoData.TryGetValue(date, out var ptoList) ? ptoList : []];
+                var todayAvailableShift = DcDfsTool.BasicFilter(context,date,ptoStaff);
+                //無符合結果時斷開
+                if (todayAvailableShift.Count == 0)
+                {
+                    retries++;
+                    if(retries>1000)
+                    {
+                        foreach (var p in count)
+                        {
+                            Console.WriteLine($"{p.Key.ToString()}: {p.Value}");
+                        }
+                        Assert.Fail();
+                    }
+                    continue;
+                }
+                var priorityShift = context.Filter.Filter(todayAvailableShift, context);
+                var shift = priorityShift.Count == 0
+                    ? DcDfsTool.GetRandomDailyShift(todayAvailableShift)
+                    : DcDfsTool.GetRandomDailyShift(priorityShift);
+                context.AssignShift(shift.StaffShifts, date);
+                //特休捕時數
+                foreach (var staffId in ptoStaff)
+                {
+                    context.ShiftState.AssignPto(staffId);
+                }
+                foreach (var dailyShift in priorityShift)
+                {
+                    foreach (var p in dailyShift.WeightCount.Count)
+                    {
+                        count[p.Key] += p.Value;
+                    }
+                }
+
+                date = date.AddDays(1);
+            }
+        }
+
+        foreach (var p in count)
+        {
+            Console.WriteLine($"{p.Key.ToString()}: {p.Value}");
+        }
+        Assert.Pass();
+    }
+    
+    [Test]
     public void DfsShiftGenerateTest1()
     {
         var dataGetter = new TestDataGetter();

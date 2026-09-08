@@ -6,7 +6,6 @@ public class WeightedFilter:IShiftFilter
 {
     public List<DailyShift> Filter(List<DailyShift> shifts, ShiftCreateContext context)
     {
-        var weight = 5;
         List<Staff> workHrRankTemp = [.. context.StaffList
             .Where(s => context.ShiftState.GetTotalWorkHalfHrs(s.Id) < context.Setting.MinMonthWorkHrs * 2)
             .OrderBy(s => context.ShiftState.GetTotalWorkHalfHrs(s.Id))];
@@ -49,26 +48,32 @@ public class WeightedFilter:IShiftFilter
         
         foreach (var dailyShift in shifts)
         {
+            var weight = 10;
             //偏好排班 符合加分 不符合減分
+            var score = 0;
             foreach (var staffId in context.PreferShift.Keys)
             {
                 var preferShift = context.PreferShift[staffId];
                 if (dailyShift.StaffShifts[staffId].DayOff)
                     continue;
                 if (dailyShift.StaffShifts[staffId].StartArrHalfHr == preferShift.StartArrHalfHr)
-                    dailyShift.WeightedScore+=weight;
-                else if(preferShift.StartArrHalfHr!=-1) dailyShift.WeightedScore-=weight;
+                    score+=weight;
+                else if(preferShift.StartArrHalfHr!=-1) score-=weight;
                 if (preferShift.LongShift)
                 {
                     if(dailyShift.StaffShifts[staffId].WorkHalfHrs >21)
-                        dailyShift.WeightedScore+=weight;
-                    else if(preferShift.LongShift) dailyShift.WeightedScore-=weight;
+                        score+=weight;
+                    else if(preferShift.LongShift) score-=weight;
                 }
             }
+            dailyShift.WeightedScore+=score;
+            dailyShift.WeightCount.Count[WeightType.偏好排班] += score;
             
             //排除已超過最低時數後 依照已排時數排名 排名高者符合班加權較多
             //為避免人數影響加權 可能只排固定幾名
+            score = 0;
             rank = 0;
+            weight = 1;
             foreach (var staffIdList in workHrRank)
             {
                 if(staffIdList==null) break;
@@ -76,39 +81,50 @@ public class WeightedFilter:IShiftFilter
                 {
                     if (dailyShift.StaffShifts[staffId].DayOff)
                     {
-                        dailyShift.WeightedScore-=Math.Max(0,weight-rank);
+                        score-=Math.Max(0,weight-rank);
                         continue;
                     }
                     if(dailyShift.StaffShifts[staffId].WorkHalfHrs >21)
-                        dailyShift.WeightedScore+=Math.Max(0,weight-rank);
-                    else dailyShift.WeightedScore+=Math.Max(0,weight-rank-2);
+                        score+=Math.Max(0,weight-rank);
+                    else score+=Math.Max(0,weight-rank-2);
                 }
                 rank++;
             }
+            dailyShift.WeightedScore+=score;
+            dailyShift.WeightCount.Count[WeightType.最低工時] += score;
+            
             //連上天數越多 放假時加權越多
+            score = 0;
+            weight = 10;
             foreach (var staff in context.StaffList)
             {
                 var chainDays=context.ShiftState.GetChainWorkDays(staff.Id);
                 if (!dailyShift.StaffShifts[staff.Id].DayOff)
                 {
-                    dailyShift.WeightedScore -= chainDays;
+                    score -= chainDays+weight-5;
                     continue;
                 }
-                dailyShift.WeightedScore += chainDays;
+                score += chainDays+weight;
             }
+            dailyShift.WeightedScore+=score;
+            dailyShift.WeightCount.Count[WeightType.連上天數] = score;
             //早班依舊以排名加權
             rank = 0;
+            score = 0;
+            weight = 10;
             foreach (var staffIdList in earlyShiftRank)
             {
                 if(staffIdList==null)break;
                 foreach (var staffId in staffIdList.Where(s=>!dailyShift.StaffShifts[s].DayOff))
                 {
                     if(dailyShift.StaffShifts[staffId].Type ==Entities.ShiftType.Early)
-                        dailyShift.WeightedScore+=Math.Max(0,weight-rank);
-                    else dailyShift.WeightedScore-=Math.Max(0,weight-rank);
+                        score+=Math.Max(0,weight-rank);
+                    else score-=Math.Max(0,weight-rank);
                 }
                 rank++;
             }
+            dailyShift.WeightedScore += score;
+            dailyShift.WeightCount.Count[WeightType.早班平均] = score;
         }
         //取加權分數最高的集合
         var topScore = shifts.Max(s => s.WeightedScore);
