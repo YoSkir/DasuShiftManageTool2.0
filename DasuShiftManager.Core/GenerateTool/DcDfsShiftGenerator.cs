@@ -63,18 +63,11 @@ public static class DcDfsTool
             HashSet<int> ptoStaff = [.. context.PtoData.TryGetValue(date, out var ptoList) ? ptoList : []];
             foreach (var dailyShift in context.DailyShift)
             {
-                var skip = false;
                 //是否符合最低人數
-                var halfHrWorkersRequest = context.WeekHalfHrWorkers[date.DayOfWeek];
-                for (var i = 0; i < halfHrWorkersRequest.EveryHalfHrMinWorkers.Length; i++)
-                {
-                    if (dailyShift.StaffCount[i] >= halfHrWorkersRequest.EveryHalfHrMinWorkers[i])
-                        continue;
-                    skip = true;
-                    break;
-                }
-                if(skip) continue;
+                if (context.WeekHalfHrWorkers[date.DayOfWeek].EveryHalfHrMinWorkers
+                    .Where((v, i) => dailyShift.StaffCount[i] < v).Any()) continue;
                 
+                var skip = false;
                 foreach (var staffId in dailyShift.StaffShifts.Keys)
                 {
                     var staffShift = dailyShift.StaffShifts[staffId];
@@ -173,7 +166,6 @@ public static class DcDfsTool
             //無符合結果時斷開
             if (todayAvailableShift.Count == 0)
             {
-                // LogTool.Log("失敗原因: 基本篩選無剩餘");
                 return false;
             }
 
@@ -221,15 +213,10 @@ public static class DcDfsTool
                 if (minWorkHr < context.Setting.MinMonthWorkHrs * 2)
                 {
                     //todo 目前先用全班 未來可加入計算往後剩餘上班日去導出最低可排時數
-                    var maxShiftHalfHr = context.Setting.ShiftHalfHrType.Max();
-                    foreach (var dailyShift in priorityShift)
-                    {
-                        if (!dailyShift.StaffShifts[targetId].DayOff &&
-                            dailyShift.StaffShifts[targetId].WorkHalfHrs == maxShiftHalfHr)
-                        {
-                            temp.Add(dailyShift);
-                        }
-                    }
+                    HashSet<int> maxShiftHalfHr = [22,26];
+                    temp.AddRange(priorityShift
+                        .Where(d=>!d.StaffShifts[targetId].DayOff)
+                        .Where(d=>maxShiftHalfHr.Contains(d.StaffShifts[targetId].WorkHalfHrs)));
 
                     if (temp.Count > 0)
                     {
@@ -244,22 +231,9 @@ public static class DcDfsTool
             //排除連上四天
             if (priorityShift.Count > 1)
             {
-                foreach (var dailyShift in priorityShift)
-                {
-                    var skip = false;
-                    foreach (var staff in context.StaffList)
-                    {
-                        if (context.ShiftState.GetChainWorkDays(staff.Id) == 3 &&
-                            !dailyShift.StaffShifts[staff.Id].DayOff)
-                        {
-                            skip = true;
-                            break;
-                        }
-                    }
-
-                    if (skip) continue;
-                    temp.Add(dailyShift);
-                }
+                temp.AddRange(priorityShift
+                    .Where(d=>context.StaffList.Any(s=>context.ShiftState.GetChainWorkDays(s.Id)==3
+                    && d.StaffShifts[s.Id].DayOff)));
 
                 if (temp.Count > 0)
                 {
@@ -284,13 +258,7 @@ public static class DcDfsTool
                         targetId = staffId;
                     }
                 }
-
-                foreach (var dailyShift in priorityShift)
-                {
-                    if (dailyShift.StaffShifts[targetId].Type != Entities.ShiftType.Early)
-                        continue;
-                    temp.Add(dailyShift);
-                }
+                temp.AddRange(priorityShift.Where(s=>s.StaffShifts[targetId].Type==Entities.ShiftType.Early));
 
                 if (temp.Count > 0)
                 {

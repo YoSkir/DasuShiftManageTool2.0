@@ -78,7 +78,7 @@ public class TestDataGetter : IDataGetter
     public Dictionary<int, StaffPreferShift> GetPreferShift()
     {
         var res = new Dictionary<int, StaffPreferShift>();
-        // res[2] = new StaffPreferShift() { StartArrHalfHr = 0 };
+        // res[1] = new StaffPreferShift() { StartArrHalfHr = -1,LongShift = true};
         return res;
     }
 
