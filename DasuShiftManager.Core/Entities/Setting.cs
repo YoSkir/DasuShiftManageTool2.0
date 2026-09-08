@@ -18,3 +18,9 @@ public class Setting
     public int MinMonthWorkHrs { get; set; }
     public int MinMonthRestDays { get; set; }
 }
+
+public class HalfHrWorkers
+{
+    public int[] EveryHalfHrMinWorkers { get; init; } = [];
+    public int[] EveryHalfHrMaxWorkers { get; init; } = [];
+}

@@ -72,4 +72,6 @@ public interface IShiftState
     void AssignPto(int staffId);
 
     public static readonly int PtoHalfHr=13;
+    void SetChainWorkDays(int staffId, int chainWorkDays);
+    void SetCurrentWeekDayOff(int staffId, DateOnly date, int getRestDaysOfCurrentWeek);
 }

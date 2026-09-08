@@ -42,7 +42,6 @@
                     {
                         rowIndex++;
                         <tr>
-                            <!-- 綠色行事曆/標籤欄位 -->
                             @{
                                 shiftCellClass = (rowIndex & 1) == 0 ? "bg-green" : "bg-green-dark";
                             }
@@ -56,7 +55,7 @@
                             <!-- 員工個人排班（資料填寫區） -->
                             @foreach (var shift in row.Shift)
                             {
-                                <td class="@shiftCellClass">@shift</td>
+                                <td class="@shiftCellClass" @onclick="()=>SelectShift(shift)">@shift.Msg</td>
                             }
                         </tr>
                     }
@@ -105,24 +104,10 @@
         <MudItem xs="12" md="2">
             <MudPaper Class="pa-3 mb-2" Color="Color.Primary" Style=" border: 1px solid #111;">
                 <MudGrid Spacing="1" Justify="Justify.SpaceBetween">
-                    @* <MudItem xs="4"> *@
-                    @*     <MudText Typo="Typo.h6" Style="font-weight: bold"> *@
-                    @*         2026年 8/2 ～ 8/29 大樹連鎖藥局 ～ 0196仁武中華 *@
-                    @*     </MudText> *@
-                    @* </MudItem> *@
-                    @* <MudItem xs="4" Class="text-center"> *@
-                    @*     <MudText Typo="Typo.h6" Style="font-weight: bold;"> *@
-                    @*         排 定 班 別 *@
-                    @*     </MudText> *@
-                    @* </MudItem> *@
-                    @* <MudItem xs="4" Class="text-right"> *@
-                    @*     <MudText Typo="Typo.h6" Style="font-weight: bold"> *@
-                    @*         應上時數/應休天數：152H / 9天 *@
-                    @*     </MudText> *@
-                    @* </MudItem> *@
                     <MudTextField @bind-Value="_minWorkHr" Label="最低所需時數" Variant="Variant.Outlined"/>
                     <MudTextField @bind-Value="_minRestDay" Label="最低休假日" Variant="Variant.Outlined"/>
-                    <MudDatePicker Label="開始日期" @bind-Date="_startDate"/>
+                    <MudDatePicker Label="開始日期" Date="_startDate" DateChanged="GenerateTable"/>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="@Generate" Class="justify-center mt-4">設定前一份班表</MudButton>
                     <MudButton Disabled="@_processing" Variant="Variant.Filled" Color="Color.Tertiary" OnClick="@Generate" Size="Size.Large" Class="justify-center mt-8">
                         @if (_processing)
                         {
@@ -134,7 +119,6 @@
                             <MudText>開始排班</MudText>
                         }
                     </MudButton>
-                    @* <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@_refreshBtn" OnClick="@Generate">刷新</MudButton> *@
                 </MudGrid>
             </MudPaper>
         </MudItem>
@@ -209,7 +193,6 @@
     private List<int> _early=[];
     private List<int> _all=[];
     private List<int> _late=[];
-    private bool _refreshBtn=true;
     private bool showFailAlert = false;
 
     private IShiftGenerator _generator;
@@ -229,6 +212,7 @@
         _minWorkHr = defaultSetting.MinMonthWorkHrs;
         _minRestDay = defaultSetting.MinMonthRestDays;
         _startDate=DateTime.Now;
+        GenerateTable(_startDate);
     }
 
     private string _getShiftStr(ShiftCreateContext context, int staffId, DateOnly date)
@@ -270,7 +254,14 @@
     {
         public int DayOfMonth { get; set; }
         public string DayOfWeek { get; set; } = "";
-        public List<string> Shift { get; set; } = [];
+        public List<ShiftItem> Shift { get; set; } = [];
+    }
+
+    public class ShiftItem
+    {
+        public int StaffId { get; init; }
+        public DateOnly Date { get; init; }
+        public string Msg {get; init;}
     }
 
     private string _getTitleZh(StaffType staffType)
@@ -318,6 +309,7 @@
         _all.Clear();
         _late.Clear();
         
+        _scheduleRowModels.Clear();
         var date = result.Context.StartDate;
         while (date <= result.Context.EndDate)
         {
@@ -328,7 +320,7 @@
             };
             foreach (var staff in result.Context.StaffList)
             {
-                schedule.Shift.Add(_getShiftStr(result.Context, staff.Id, date));
+                schedule.Shift.Add(new ShiftItem(){StaffId = staff.Id, Date = date, Msg = _getShiftStr(result.Context, staff.Id, date)});
             }
 
             _scheduleRowModels.Add(schedule);
@@ -352,6 +344,36 @@
     {
         showFailAlert = false;
         return Task.CompletedTask;
+    }
+
+    private async Task GenerateTable(DateTime? newDate)
+    {
+        _startDate=newDate;
+        var date = DateOnly.FromDateTime(_startDate.Value);
+        var end = date.AddDays(27);
+        _scheduleRowModels.Clear();
+        while (date <= end)
+        {
+            var schedule = new ScheduleRowModel
+            {
+                DayOfMonth = date.Day,
+                DayOfWeek = _getDayOfWeekName((int)date.DayOfWeek),
+            };
+            foreach (var staff in _staffList)
+            {
+                schedule.Shift.Add(new ShiftItem(){StaffId =staff.Id,Date = date,Msg = ""});
+            }
+
+            _scheduleRowModels.Add(schedule);
+            date = date.AddDays(1);
+        }
+    }
+
+    private ShiftItem? _selectedShift;
+    
+    private void SelectShift(ShiftItem shift)
+    {
+        _selectedShift=shift;
     }
 
 }

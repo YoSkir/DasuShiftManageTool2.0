@@ -8,7 +8,7 @@ public class TestDataGetter : IDataGetter
     {
         var res = new Setting
         {
-            ShiftStartDay = 27,
+            ShiftStartDay = 28,
             ShiftStartHalfHr = 18,
             ShiftHalfHrCount = 26,
             FirstBreakActiveWorkHalfHrs = 12,
@@ -20,38 +20,8 @@ public class TestDataGetter : IDataGetter
             MinMonthWorkHrs = 144,
             MinMonthRestDays = 10,
             ShiftHalfHrType = [13, 17, 22, 26],
-            EveryHalfHrMinWorkers =
-            [
-                2, 2,
-                2, 2,
-                2, 2,
-                2, 2,
-                2, 2,
-                2, 2,
-                2, 2,
-                2, 2,
-                2, 2,
-                2, 2,
-                2, 2,
-                2, 2,
-                2, 2
-            ],
-            EveryHalfHrMaxWorkers =
-            [
-                2, 2,
-                2, 2,
-                3, 3,
-                3, 3,
-                3, 3,
-                3, 3,
-                3, 3,
-                3, 3,
-                3, 3,
-                3, 3,
-                3, 3,
-                3, 3,
-                3, 3
-            ],
+            EveryHalfHrMinWorkers = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            EveryHalfHrMaxWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
         };
         return res;
     }
@@ -60,35 +30,15 @@ public class TestDataGetter : IDataGetter
     {
         var res = new List<Staff>();
         res.Add(new Staff()
-        {
-            Id = 1,
-            Name = "吳玟頤",
-            StaffType = StaffType.Manager
-        });
+            { Id = 1, Name = "吳玟頤", StaffType = StaffType.Manager });
         res.Add(new Staff()
-        {
-            Id = 2,
-            Name = "沈煌偉",
-            StaffType = StaffType.Pharmacist
-        });
+            { Id = 2, Name = "沈煌偉", StaffType = StaffType.Pharmacist });
         res.Add(new Staff()
-        {
-            Id = 3,
-            Name = "周怡伶",
-            StaffType = StaffType.Normal
-        });
+            { Id = 3, Name = "周怡伶", StaffType = StaffType.Normal });
         res.Add(new Staff()
-        {
-            Id = 4,
-            Name = "郭婷芳",
-            StaffType = StaffType.Normal
-        });
+            { Id = 4, Name = "郭婷芳", StaffType = StaffType.Normal });
         res.Add(new Staff()
-        {
-            Id = 5,
-            Name = "陳姿涵",
-            StaffType = StaffType.Normal
-        });
+            { Id = 5, Name = "陳姿涵", StaffType = StaffType.Normal });
 
         return res;
     }
@@ -104,8 +54,8 @@ public class TestDataGetter : IDataGetter
         res[new DateOnly(2026, 10, 14)] = [1];
         res[new DateOnly(2026, 10, 15)] = [1];
         res[new DateOnly(2026, 10, 16)] = [1];
-        res[new DateOnly(2026, 10, 17)] = [1,3];
-        res[new DateOnly(2026, 10, 18)] = [1,3];
+        res[new DateOnly(2026, 10, 17)] = [1, 3];
+        res[new DateOnly(2026, 10, 18)] = [1, 3];
         res[new DateOnly(2026, 10, 19)] = [3];
         return res;
     }
@@ -136,6 +86,48 @@ public class TestDataGetter : IDataGetter
     {
         var res = new Dictionary<DateOnly, List<int>>();
         res[new DateOnly(2026, 10, 10)] = [3];
+        return res;
+    }
+
+    public Dictionary<DayOfWeek, HalfHrWorkers> GetHalfHrWorkers()
+    {
+        var res = new Dictionary<DayOfWeek, HalfHrWorkers>();
+        res[DayOfWeek.Monday] = new HalfHrWorkers()
+        {
+            EveryHalfHrMinWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+            EveryHalfHrMaxWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        };
+        res[DayOfWeek.Tuesday] = new HalfHrWorkers()
+        {
+            EveryHalfHrMinWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+            EveryHalfHrMaxWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        };
+        res[DayOfWeek.Wednesday] = new HalfHrWorkers()
+        {
+            EveryHalfHrMinWorkers = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            EveryHalfHrMaxWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        };
+        res[DayOfWeek.Thursday] = new HalfHrWorkers()
+        {
+            EveryHalfHrMinWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+            EveryHalfHrMaxWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        };
+        res[DayOfWeek.Friday] = new HalfHrWorkers()
+        {
+            EveryHalfHrMinWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+            EveryHalfHrMaxWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        };
+        res[DayOfWeek.Saturday] = new HalfHrWorkers()
+        {
+            EveryHalfHrMinWorkers = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            EveryHalfHrMaxWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        };
+        res[DayOfWeek.Sunday] = new HalfHrWorkers()
+        {
+            EveryHalfHrMinWorkers = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            EveryHalfHrMaxWorkers = [2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        };
+
         return res;
     }
 }

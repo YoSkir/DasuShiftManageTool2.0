@@ -16,13 +16,9 @@ public class DcDfsShiftGenerator : IShiftGenerator
         context.EndDate = context.StartDate;
         context.ShiftState = new DfsShiftState(context.StartDate, context.EndDate, context.Setting, context.StaffList);
         assignTool.ShiftDfs(context, context.StartDate, context.NextUndoneArrHalfHr(context.StartDate));
+        Console.WriteLine($"組合數量:{context.DailyShift.Count}");
         //每日班表組合
         var tryCount = 0;
-        //帶入上一份班表的連續上班、當周休假 以方便首日排班判斷
-        if (context.PrevShiftState != null)
-        {
-        }
-
         while (!DcDfsTool.AssignMonthly(context))
         {
             tryCount++;
@@ -47,6 +43,17 @@ public static class DcDfsTool
         context.ClearShiftTypeCount();
         var date = context.StartDate;
 
+        //帶入上一份班表的連續上班、當周休假 以方便首日排班判斷
+        if (context.PrevShiftState != null)
+        {
+            foreach (var staff in context.StaffList)
+            {
+                context.ShiftState.SetChainWorkDays(staff.Id, context.PrevShiftState.GetChainWorkDays(staff.Id));
+                context.ShiftState.SetCurrentWeekDayOff(staff.Id, date,
+                    context.PrevShiftState.GetRestDaysOfCurrentWeek(staff.Id, date));
+            }
+        }
+        
         while (date <= context.EndDate)
         {
             var todayAvailableShift = new List<DailyShift>();
@@ -57,6 +64,17 @@ public static class DcDfsTool
             foreach (var dailyShift in context.DailyShift)
             {
                 var skip = false;
+                //是否符合最低人數
+                var halfHrWorkersRequest = context.WeekHalfHrWorkers[date.DayOfWeek];
+                for (var i = 0; i < halfHrWorkersRequest.EveryHalfHrMinWorkers.Length; i++)
+                {
+                    if (dailyShift.StaffCount[i] >= halfHrWorkersRequest.EveryHalfHrMinWorkers[i])
+                        continue;
+                    skip = true;
+                    break;
+                }
+                if(skip) continue;
+                
                 foreach (var staffId in dailyShift.StaffShifts.Keys)
                 {
                     var staffShift = dailyShift.StaffShifts[staffId];

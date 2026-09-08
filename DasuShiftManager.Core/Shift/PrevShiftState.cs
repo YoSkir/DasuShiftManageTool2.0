@@ -74,4 +74,14 @@ public class PrevShiftState:IShiftState
     {
         throw new NotImplementedException();
     }
+
+    public void SetChainWorkDays(int staffId, int chainWorkDays)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SetCurrentWeekDayOff(int staffId, DateOnly date, int getRestDaysOfCurrentWeek)
+    {
+        throw new NotImplementedException();
+    }
 }

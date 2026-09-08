@@ -162,6 +162,17 @@ public class DfsShiftState :IShiftState
         _assignHistory.Push(new AssignMove(staffId,true));
     }
 
+    public void SetChainWorkDays(int staffId, int chainWorkDays)
+    {
+        _getStaffShift(staffId).ChainWorkDays = chainWorkDays;
+    }
+
+    public void SetCurrentWeekDayOff(int staffId, DateOnly date, int getRestDaysOfCurrentWeek)
+    {
+        var shift = _getStaffShift(staffId);
+        shift.WeekDayOffCount[shift.WeekIndex[date]] += getRestDaysOfCurrentWeek;
+    }
+
     /// <summary>
     /// 將指定員工標記為休假。
     /// </summary>

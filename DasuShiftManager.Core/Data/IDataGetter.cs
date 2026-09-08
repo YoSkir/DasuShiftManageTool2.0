@@ -11,4 +11,5 @@ public interface IDataGetter
     Dictionary<int, ShiftInfo?[]> GetFixedShift();
     Dictionary<int,StaffPreferShift> GetPreferShift();
     Dictionary<DateOnly, List<int>> GetPtoStaffList();
+    Dictionary<DayOfWeek,HalfHrWorkers> GetHalfHrWorkers();
 }

@@ -26,6 +26,7 @@ public class ShiftCreateContext
     public Dictionary<int,StaffPreferShift> PreferShift { get; init; }
     public ShiftType ShiftType { get; init; }
     public Dictionary<int, Dictionary<DateOnly, ShiftInfo>> AssignedShift { get; set; }
+    public Dictionary<DayOfWeek,HalfHrWorkers> WeekHalfHrWorkers { get; init; }
 
 
     /// <summary>
@@ -43,6 +44,7 @@ public class ShiftCreateContext
        VacationData = dataGetter.GetVacationStaffList();
        AssignedShift = dataGetter.GetAssignedShiftList();
        StaffList = dataGetter.GetStaffList();
+       WeekHalfHrWorkers = dataGetter.GetHalfHrWorkers();
        if(StaffList.Count==0)
            throw new InvalidOperationException("No staff list found");
        ShiftType = new ShiftType();
@@ -225,6 +227,17 @@ public class ShiftCreateContext
         var newUndone = GetAssignableHrInfo(assignableHrInfo.Date);
         assignableHrInfo.UndoneHalfHrCount=newUndone.UndoneHalfHrCount;
         assignableHrInfo.UndoneArrHalfHr=newUndone.UndoneArrHalfHr; 
+    }
+
+    public int NextNotFullArrHalfHr(DateOnly date, int arrHalfHr)
+    {
+        for (var i = arrHalfHr; i < Setting.ShiftHalfHrCount; i++)
+        {
+            var currentWorkers = ShiftState.GetArrHalfHrAssignedStaffCount(date, i);
+            var neededWorkers = Setting.EveryHalfHrMaxWorkers[i];
+            if (neededWorkers > currentWorkers) return i;
+        }
+        return Setting.ShiftHalfHrCount;
     }
 }
 

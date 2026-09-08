@@ -36,6 +36,11 @@ public class DataGetter:IDataGetter
         throw new NotImplementedException();
     }
 
+    public Dictionary<DayOfWeek, HalfHrWorkers> GetHalfHrWorkers()
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// 取得排班設定資料。
     /// </summary>
