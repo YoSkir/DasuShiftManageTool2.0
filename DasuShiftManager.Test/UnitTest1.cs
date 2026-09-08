@@ -3,6 +3,7 @@ using DasuShiftManager.Core.Data;
 using DasuShiftManager.Core.Entities;
 using DasuShiftManager.Core.GenerateTool;
 using DasuShiftManager.Core.GenerateTool.AssignTool;
+using DasuShiftManager.Core.GenerateTool.Filter;
 using DasuShiftManager.Core.GenerateTool.ResultSaver;
 using DasuShiftManager.Core.Shift;
 

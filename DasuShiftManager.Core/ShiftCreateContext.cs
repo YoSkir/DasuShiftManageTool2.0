@@ -1,5 +1,6 @@
 ﻿using DasuShiftManager.Core.Data;
 using DasuShiftManager.Core.Entities;
+using DasuShiftManager.Core.GenerateTool.Filter;
 using DasuShiftManager.Core.GenerateTool.ResultSaver;
 using DasuShiftManager.Core.Shift;
 
@@ -27,6 +28,7 @@ public class ShiftCreateContext
     public ShiftType ShiftType { get; init; }
     public Dictionary<int, Dictionary<DateOnly, ShiftInfo>> AssignedShift { get; set; }
     public Dictionary<DayOfWeek,HalfHrWorkers> WeekHalfHrWorkers { get; init; }
+    public IShiftFilter Filter { get; } = new OrderFilter();
 
 
     /// <summary>
