@@ -13,7 +13,7 @@ public class ShiftInfo
         StartArrHalfHr = startArrHalfHr;
         WorkHalfHrs = workHalfHrs;
         if (workHalfHrs >= 22) Type = ShiftType.All;
-        else if (startArrHalfHr < 13) Type = ShiftType.Early;
+        else if ((startArrHalfHr ==0 && workHalfHrs<18)||(startArrHalfHr==4&&workHalfHrs<14)) Type = ShiftType.Early;
         else Type = ShiftType.Late;
     }
 

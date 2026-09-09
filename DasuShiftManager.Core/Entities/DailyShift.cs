@@ -8,6 +8,12 @@ public class DailyShift
     public int[] StaffCount { get; init; }
     public int WeightedScore { get; set; } = 0;
     public WeightCount WeightCount { get; }=new WeightCount();
+
+    public void AddWeightScore(WeightType weightType, int weight)
+    {
+        WeightedScore += weight;
+        WeightCount.Count[weightType] += weight;
+    }
 }
 
 public class WeightCount

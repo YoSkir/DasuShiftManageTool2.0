@@ -28,7 +28,7 @@ public class ShiftCreateContext
     public ShiftType ShiftType { get; init; }
     public Dictionary<int, Dictionary<DateOnly, ShiftInfo>> AssignedShift { get; set; }
     public Dictionary<DayOfWeek,HalfHrWorkers> WeekHalfHrWorkers { get; init; }
-    public IShiftFilter Filter { get; set; } = new WeightedFilter();
+    public IShiftFilter Filter { get; set; } = new EasyWeightedFilter();
 
 
     /// <summary>

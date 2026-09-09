@@ -187,7 +187,7 @@
     // 模擬排班資料列
     private List<ScheduleRowModel> _scheduleRowModels = [];
     private List<Staff> _staffList;
-    private List<int> _totalHr=[];
+    private List<string> _totalHr=[];
     private string shiftCellClass;
     private List<int> _totalRest=[];
     private List<int> _early=[];
@@ -329,7 +329,8 @@
         
         foreach (var staff in result.Context.StaffList)
         {
-            _totalHr.Add(result.Context.ShiftState.GetTotalWorkHalfHrs(staff.Id)/2);
+            var totalHr = result.Context.ShiftState.GetTotalWorkHalfHrs(staff.Id) / 2;
+            _totalHr.Add($"{_minWorkHr} 加{totalHr-_minWorkHr}");
             _totalRest.Add(result.Context.ShiftState.GetTotalRestDays(staff.Id));
             _early.Add(result.Context.ShiftType.Early[staff.Id]);
             _late.Add(result.Context.ShiftType.Late[staff.Id]);

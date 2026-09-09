@@ -33,7 +33,7 @@ public class Tests
         context.EndDate = context.StartDate;
         context.ShiftState = new DfsShiftState(context.StartDate, context.EndDate, context.Setting, context.StaffList);
         assignTool.ShiftDfs(context, context.StartDate, context.NextUndoneArrHalfHr(context.StartDate));
-        context.Filter = new WeightedFilter();
+        context.Filter = new EasyWeightedFilter();
         var count = Enum.GetValues<WeightType>().ToDictionary(t => t, t => 0);
         for (var i = 0; i < 1; i++)
         {
