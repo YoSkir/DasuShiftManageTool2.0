@@ -1,30 +1,30 @@
-# 大樹藥局排班系統
+# :deciduous_tree: 大樹藥局排班系統 :deciduous_tree:
 
 大樹藥局排班系統是一套以 C#、.NET 10、Blazor 與 MudBlazor 開發的排班工具。系統會根據員工資料、班別設定、人力需求、休假、特休、固定班、指定班與個人偏好，自動產生 28 天的排班結果。
 
-Demo：<https://dasushiftmanagetool2-0.onrender.com>
+:arrow_forward:Demo：<https://dasushiftmanagetool2-0.onrender.com>
 
-## 系統特色
+## :seedling:系統特色
 
 - 以每半小時為單位計算人力，能處理早班、晚班與全班。
 - 以每日分治法先建立當日所有合法班表，再串接成完整的 28 天班表。
 - 以 DFS（Depth-First Search，深度優先搜尋）與回溯法窮舉每日可能的排法。
-- 將「不可違反的規則」與「希望越平均越好」的偏好分開處理。
+- 將**不可違反的規則**與**希望越平均越好**的偏好分開處理。
 - 支援指定休假、特休、固定班、指定班、最低與最高人力、最低工時、最低休假天數及最高連續上班天數。
 - 對最低工時、早班平均、連續上班天數與員工偏好進行加權，從合法候選中選出較適合的方案。
 
-## 使用技術
+## :seedling:使用技術
 
-| 層級 | 技術或專案 |
-| --- | --- |
-| 使用者介面 | Blazor、MudBlazor |
-| 後端 | ASP.NET Core |
-| 核心業務邏輯 | `DasuShiftManager.Core` |
+| 層級 | 技術或專案                |
+| --- |---------------------------|
+| 使用者介面 | Blazor、MudBlazor         |
+| 後端 | ASP.NET Core              |
+| 核心業務邏輯 | `DasuShiftManager.Core`   |
 | 共用資料模型與驗證 | `DasuShiftManager.Shared` |
-| 資料存取抽象 | `IDataGetter` |
-| 語言與框架 | C#、.NET 10 |
+| 資料存取抽象 | `DasuShiftManager.Data`   |
+| 語言與框架 | C#、.NET 10               |
 
-## 專案結構
+## :seedling:專案結構
 
 ```text
 DasuShiftManager.Core       排班演算法、狀態管理、篩選器與資料抽象
@@ -35,7 +35,7 @@ DasuShiftManager.Data       資料層專案
 DasuShiftManager.Test       測試專案
 ```
 
-## 排班演算法
+## :seedling:排班演算法
 
 ### 1. 每日分治法
 
@@ -44,7 +44,7 @@ DasuShiftManager.Test       測試專案
 1. 建立當日的 `DfsShiftState`。
 2. 從尚未達到最低人力的半小時開始處理。
 3. 依序嘗試尚未排班的員工，以及設定允許的工作時數。
-4. 當某個半小時達到最低人力後，移動到下一個仍未完成的時段。
+4. 當某個半小時達到最低人力後，移動到下一個仍未完成的時段，未達最高人力則繼續嘗試。
 5. 當全日需求完成時，透過 `DcDfsResultSaver` 保存一個候選班表。
 6. 回溯上一個排班動作，繼續搜尋其他可能性。
 
@@ -76,7 +76,7 @@ DasuShiftManager.Test       測試專案
 5. 繼續處理下一天。
 6. 若後續條件無法滿足，放棄本次串接並重新嘗試。
 
-目前月度串接最多嘗試 500 次；每次嘗試都會重新建立狀態與清除班別統計，避免上一輪結果污染下一輪。
+目前月度串接最多嘗試 500 次(實測最高所需次數約為10次左右)；每次嘗試都會重新建立狀態與清除班別統計，避免上一輪結果污染下一輪。
 
 ### 4. 後處理與最低工時補足
 
@@ -87,7 +87,7 @@ DasuShiftManager.Test       測試專案
 - 將原本的短班延長為較長班別。
 - 若仍無法達到最低工時，判定本次月度班表失敗並重新嘗試。
 
-## 排班條件與篩選方式
+## :seedling:排班條件與篩選方式
 
 排班條件分成兩類：**硬性條件**負責排除不合法候選；**軟性條件**不直接淘汰候選，而是透過加權讓較理想的方案優先被選中。
 
@@ -107,9 +107,6 @@ DasuShiftManager.Test       測試專案
 | 每週最低休假天數 | 週六、週日檢查目前休假數，避免在週期結束時低於 `MinWeekRestDays` 的需求。 |
 | 每月最低休假天數 | 月度完成後檢查 `MinMonthRestDays`，不足時本次結果無效。 |
 | 每月最低工時 | 月度完成後檢查 `MinMonthWorkHrs`，不足時嘗試後處理，仍不足則重新排班。 |
-| 班別時間範圍 | `DfsShiftState` 檢查開始時間與工作時數不能超出當日半小時陣列範圍。 |
-
-指定班與指定休假的優先順序高於固定班：當某位員工當天有指定資料時，篩選器會先依指定資料判斷，不再用固定班別覆蓋它。
 
 ### 軟性條件：透過加權選擇
 
@@ -129,7 +126,7 @@ DasuShiftManager.Test       測試專案
 
 這些篩選器都實作 `IShiftFilter`，因此可以依需求替換，不必修改月度排班流程。
 
-## 設計模式與架構設計
+## :seedling:設計模式與架構設計
 
 ### Strategy Pattern（策略模式）
 
@@ -158,7 +155,7 @@ DasuShiftManager.Test       測試專案
 
 `ShiftCreateTool` 透過建構子注入 `IDataGetter`，讓資料存取與排班服務分離，也方便測試時注入 `TestDataGetter`。
 
-## 一次排班的流程
+## :seedling:一次排班的流程
 
 ```text
 讀取設定與員工資料
@@ -182,26 +179,7 @@ IShiftFilter 加權或排序
 產生 28 天排班結果
 ```
 
-## 執行專案
-
-需求：
-
-- .NET 10 SDK
-
-在專案根目錄執行：
-
-```bash
-dotnet restore
-dotnet run --project DasuShiftManager.Blazor
-```
-
-若要執行測試：
-
-```bash
-dotnet test
-```
-
-## 目前設計限制
+## :seedling:目前設計限制
 
 - 月度串接採用隨機選取最高分候選，因此每次執行可能得到不同但符合條件的結果。
 - 若人員數量、可用班別或休假條件過於嚴格，可能找不到合法的月度組合。
