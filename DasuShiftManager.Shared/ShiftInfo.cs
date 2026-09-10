@@ -1,4 +1,4 @@
-﻿namespace DasuShiftManager.Core.Entities;
+﻿namespace DasuShiftManager.Shared;
 
 public class ShiftInfo
 {

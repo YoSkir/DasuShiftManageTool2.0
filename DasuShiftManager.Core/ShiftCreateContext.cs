@@ -3,6 +3,7 @@ using DasuShiftManager.Core.Entities;
 using DasuShiftManager.Core.GenerateTool.Filter;
 using DasuShiftManager.Core.GenerateTool.ResultSaver;
 using DasuShiftManager.Core.Shift;
+using DasuShiftManager.Shared;
 
 namespace DasuShiftManager.Core;
 
@@ -11,23 +12,23 @@ namespace DasuShiftManager.Core;
 /// </summary>
 public class ShiftCreateContext
 {
-    public Dictionary<DateOnly, List<int>> PtoData { get;  }
+    public Dictionary<DateOnly, List<int>> PtoData { get; init; }
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
     public Setting Setting { get;  }
-    public Dictionary<DateOnly, List<int>> VacationData { get;  }
+    public Dictionary<DateOnly, List<int>> VacationData { get; init; }
     public List<Staff> StaffList { get;  }
     public IShiftState ShiftState { get; set; }
     public int IdCount { get; set; }
     public IResultSaver ResultSaver { get; set; }
     //單日所有可能
     public List<DailyShift> DailyShift { get;} =[];
-    public IShiftState? PrevShiftState { get; init; } = null;
-    public Dictionary<int, ShiftInfo?[]> FixedShiftStaff { get; init; }
-    public Dictionary<int,StaffPreferShift> PreferShift { get; init; }
-    public ShiftType ShiftType { get; init; }
-    public Dictionary<int, Dictionary<DateOnly, ShiftInfo>> AssignedShift { get; set; }
-    public Dictionary<DayOfWeek,HalfHrWorkers> WeekHalfHrWorkers { get; init; }
+    public IShiftState? PrevShiftState { get; } = null;
+    public Dictionary<int, ShiftInfo?[]> FixedShiftStaff { get; }
+    public Dictionary<int,StaffPreferShift> PreferShift { get; }
+    public ShiftType ShiftType { get; }
+    public Dictionary<int, Dictionary<DateOnly, ShiftInfo>> AssignedShift { get; init; }
+    public Dictionary<DayOfWeek,HalfHrWorkers> WeekHalfHrWorkers { get; }
     public IShiftFilter Filter { get; set; } = new EasyWeightedFilter();
 
 
@@ -42,9 +43,6 @@ public class ShiftCreateContext
     {
        StartDate = startDate;
        Setting = setting;
-       PtoData = dataGetter.GetPtoStaffList();
-       VacationData = dataGetter.GetVacationStaffList();
-       AssignedShift = dataGetter.GetAssignedShiftList();
        StaffList = dataGetter.GetStaffList();
        WeekHalfHrWorkers = dataGetter.GetHalfHrWorkers();
        if(StaffList.Count==0)
@@ -209,16 +207,16 @@ public class ShiftCreateContext
     {
         switch (shiftInfo.Type)
         {
-            case Entities.ShiftType.Early:
+            case Shared.ShiftType.Early:
                 ShiftType.Early[staffId]++;
                 break;
-            case Entities.ShiftType.Late:
+            case Shared.ShiftType.Late:
                 ShiftType.Late[staffId]++;
                 break;
-            case Entities.ShiftType.All:
+            case Shared.ShiftType.All:
                 ShiftType.All[staffId]++;
                 break;
-            case Entities.ShiftType.Rest:
+            case Shared.ShiftType.Rest:
                 break;
         }
         ShiftState.AssignShift(staffId,date,shiftInfo);

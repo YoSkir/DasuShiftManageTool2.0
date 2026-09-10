@@ -1,17 +1,19 @@
 ﻿@page "/"
-@using System.Collections
-@using System.Globalization
-@using DasuShiftManager.Core
 @using DasuShiftManager.Core.Data
 @using DasuShiftManager.Core.Entities
 @using DasuShiftManager.Core.GenerateTool
+@using DasuShiftManager.Shared
+@using ShiftType = DasuShiftManager.Shared.ShiftType
 @inherits LayoutComponentBase
+@inject IDialogService DialogService
 
 
 <MudContainer MaxWidth="MaxWidth.False" Style="width: 100%" Class="mt-4">
     @if (showFailAlert)
     {
-        <MudAlert Severity="Severity.Warning" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseAlert(true))">排班失敗 請檢查降低所需工時</MudAlert>
+        <MudAlert Severity="Severity.Warning" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true"
+                  CloseIconClicked="(() => CloseAlert(true))">排班失敗 請檢查降低所需工時
+        </MudAlert>
     }
     <MudGrid Spacing="3">
         <MudItem xs="12" md="10">
@@ -55,7 +57,10 @@
                             <!-- 員工個人排班（資料填寫區） -->
                             @foreach (var shift in row.Shift)
                             {
-                                <td class="@shiftCellClass" @onclick="()=>SelectShift(shift)">@shift.Msg</td>
+                                <td class="@shiftCellClass @SelectShiftClass(shift)"
+                                    @onclick="() => SelectShift(shift)">
+                                    @shift.Msg
+                                </td>
                             }
                         </tr>
                     }
@@ -107,8 +112,11 @@
                     <MudTextField @bind-Value="_minWorkHr" Label="最低所需時數" Variant="Variant.Outlined"/>
                     <MudTextField @bind-Value="_minRestDay" Label="最低休假日" Variant="Variant.Outlined"/>
                     <MudDatePicker Label="開始日期" Date="_startDate" DateChanged="GenerateTable"/>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="@Generate" Class="justify-center mt-4">設定前一份班表</MudButton>
-                    <MudButton Disabled="@_processing" Variant="Variant.Filled" Color="Color.Tertiary" OnClick="@Generate" Size="Size.Large" Class="justify-center mt-8">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="@Generate"
+                               Class="justify-center mt-4">設定前一份班表
+                    </MudButton>
+                    <MudButton Disabled="@_processing" Variant="Variant.Filled" Color="Color.Tertiary"
+                               OnClick="@Generate" Size="Size.Large" Class="justify-center mt-8">
                         @if (_processing)
                         {
                             <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
@@ -149,7 +157,7 @@
 
     .bg-yellow-dark {
         background-color: #dfdfa2 !important;
-        color: black !important;
+        color: black
     }
 
     .bg-green {
@@ -178,6 +186,13 @@
         font-size: 18px;
         font-weight: bold;
     }
+
+    .td-border {
+        border: 3px solid #518bf6 !important; /* 有邊框 (例如 MudBlazor Primary 色) */
+        color: #3866ac;
+    !important;
+    }
+
 </style>
 
 @code {
@@ -187,12 +202,13 @@
     // 模擬排班資料列
     private List<ScheduleRowModel> _scheduleRowModels = [];
     private List<Staff> _staffList;
-    private List<string> _totalHr=[];
+    private List<string> _totalHr = [];
     private string shiftCellClass;
-    private List<int> _totalRest=[];
-    private List<int> _early=[];
-    private List<int> _all=[];
-    private List<int> _late=[];
+    private string setShiftClass;
+    private List<int> _totalRest = [];
+    private List<int> _early = [];
+    private List<int> _all = [];
+    private List<int> _late = [];
     private bool showFailAlert = false;
 
     private IShiftGenerator _generator;
@@ -211,21 +227,21 @@
         var defaultSetting = _dataGetter.GetSetting();
         _minWorkHr = defaultSetting.MinMonthWorkHrs;
         _minRestDay = defaultSetting.MinMonthRestDays;
-        _startDate=DateTime.Now;
+        _startDate = DateTime.Now;
         GenerateTable(_startDate);
     }
 
-    private string _getShiftStr(ShiftCreateContext context, int staffId, DateOnly date)
+    private string _getShiftStr(ShiftInfo? shiftInfo, bool pto)
     {
-        var shiftInfo = context.ShiftState.GetShiftCopy(staffId, date);
+        if (shiftInfo == null) return "";
         if (shiftInfo.DayOff)
         {
-            if (context.PtoData.TryGetValue(date, out var ptoIdList) && ptoIdList.Contains(staffId))
+            if (pto)
                 return "特6H";
             return "/";
         }
 
-        var startHh = shiftInfo.StartArrHalfHr + context.Setting.ShiftStartHalfHr;
+        var startHh = shiftInfo.StartArrHalfHr + 18;
         var start = _getHalfHrShow(startHh);
         var end = _getHalfHrShow(startHh + shiftInfo.WorkHalfHrs);
         var back = _getRestHalfHour(shiftInfo.WorkHalfHrs);
@@ -261,7 +277,10 @@
     {
         public int StaffId { get; init; }
         public DateOnly Date { get; init; }
-        public string Msg {get; init;}
+        public string Msg { get; set; }
+        public ShiftSelectDialog.SelectedShiftDto? ChosenShift { get; set; }
+        public ShiftInfo? ShiftInfo{ get; init; }
+        public ShiftType? ShiftType { get; set; } = null;
     }
 
     private string _getTitleZh(StaffType staffType)
@@ -284,15 +303,24 @@
     {
         _processing = true;
         showFailAlert = false;
-        
+
         StateHasChanged();
         await Task.Yield();
-        
-        var startDate=DateOnly.FromDateTime(_startDate.Value);
+
+        var startDate = DateOnly.FromDateTime(_startDate.Value);
         ShiftCreateResult result;
+        var dto = new ShiftGenerateDto()
+        {
+            Day = startDate.Day,
+            MinWorkHrs = _minWorkHr,
+            MinRestDay = _minRestDay,
+            PtoStaffList = PtoStaffList,
+            AssignedShiftList = AssignedShiftList,
+            VacationList = VacationList
+        };
         try
         {
-            result = await Task.Run(() => _createTool.GenerateThisMonthShift(startDate.Year, startDate.Month, _generator, startDate.Day, _minWorkHr, _minRestDay));
+            result = await Task.Run(() => _createTool.GenerateThisMonthShift(startDate.Year, startDate.Month, _generator, dto));
         }
         catch (Exception e)
         {
@@ -301,14 +329,14 @@
             StateHasChanged();
             return;
         }
-        
+
         _scheduleRowModels.Clear();
         _totalHr.Clear();
         _totalRest.Clear();
         _early.Clear();
         _all.Clear();
         _late.Clear();
-        
+
         _scheduleRowModels.Clear();
         var date = result.Context.StartDate;
         while (date <= result.Context.EndDate)
@@ -320,17 +348,40 @@
             };
             foreach (var staff in result.Context.StaffList)
             {
-                schedule.Shift.Add(new ShiftItem(){StaffId = staff.Id, Date = date, Msg = _getShiftStr(result.Context, staff.Id, date)});
+                ShiftSelectDialog.SelectedShiftDto? chosenShift = null;
+                if (PtoStaffList.TryGetValue(date, out var p) && p.Contains(staff.Id))
+                    chosenShift = new ShiftSelectDialog.SelectedShiftDto() { Pto = true, DayOff = true,SelectedShift = ShiftSelectDialog.Shift.特休};
+                else if (VacationList.TryGetValue(date, out var v) && v.Contains(staff.Id))
+                    chosenShift = new ShiftSelectDialog.SelectedShiftDto() { DayOff = true ,SelectedShift = ShiftSelectDialog.Shift.指休};
+                else if (AssignedShiftList.TryGetValue(staff.Id, out var s)
+                         && s.TryGetValue(date, out var shiftInfo))
+                    chosenShift = new ShiftSelectDialog.SelectedShiftDto()
+                    {
+                        StartHalfHr = shiftInfo.StartArrHalfHr,
+                        WorkHr = shiftInfo.WorkHalfHrs,
+                        SelectedShift = ShiftSelectDialog.Shift.上班
+                    };
+                var shift=result.Context.ShiftState.GetShiftCopy(staff.Id, date);
+                var pto = result.Context.PtoData.TryGetValue(date, out var ptoIdList) && ptoIdList.Contains(staff.Id);
+                schedule.Shift.Add(new ShiftItem()
+                {
+                    StaffId = staff.Id,
+                    Date = date,
+                    Msg = _getShiftStr(shift,pto),
+                    ShiftType = _getShiftType(result.Context, staff.Id, date),
+                    ChosenShift = chosenShift,
+                    ShiftInfo = shift
+                });
             }
 
             _scheduleRowModels.Add(schedule);
             date = date.AddDays(1);
         }
-        
+
         foreach (var staff in result.Context.StaffList)
         {
             var totalHr = result.Context.ShiftState.GetTotalWorkHalfHrs(staff.Id) / 2;
-            _totalHr.Add($"{_minWorkHr} 加{totalHr-_minWorkHr}");
+            _totalHr.Add($"{_minWorkHr} 加{totalHr - _minWorkHr}");
             _totalRest.Add(result.Context.ShiftState.GetTotalRestDays(staff.Id));
             _early.Add(result.Context.ShiftType.Early[staff.Id]);
             _late.Add(result.Context.ShiftType.Late[staff.Id]);
@@ -341,6 +392,12 @@
         StateHasChanged();
     }
 
+    private ShiftType? _getShiftType(ShiftCreateContext context, int staffId, DateOnly date)
+    {
+        var shiftInfo = context.ShiftState.GetShiftCopy(staffId, date);
+        return shiftInfo.Type;
+    }
+
     private Task CloseAlert(bool b)
     {
         showFailAlert = false;
@@ -349,7 +406,7 @@
 
     private async Task GenerateTable(DateTime? newDate)
     {
-        _startDate=newDate;
+        _startDate = newDate;
         var date = DateOnly.FromDateTime(_startDate.Value);
         var end = date.AddDays(27);
         _scheduleRowModels.Clear();
@@ -362,7 +419,7 @@
             };
             foreach (var staff in _staffList)
             {
-                schedule.Shift.Add(new ShiftItem(){StaffId =staff.Id,Date = date,Msg = ""});
+                schedule.Shift.Add(new ShiftItem() { StaffId = staff.Id, Date = date, Msg = "" });
             }
 
             _scheduleRowModels.Add(schedule);
@@ -371,10 +428,70 @@
     }
 
     private ShiftItem? _selectedShift;
-    
-    private void SelectShift(ShiftItem shift)
+
+    private Dictionary<DateOnly, List<int>> PtoStaffList { get; } = [];
+    private Dictionary<int, Dictionary<DateOnly, ShiftInfo>> AssignedShiftList { get; } = [];
+    private Dictionary<DateOnly, List<int>> VacationList { get; } = [];
+
+    private async Task SelectShift(ShiftItem shift)
     {
-        _selectedShift=shift;
+        _selectedShift = shift;
+        var param = new DialogParameters<ShiftSelectDialog>()
+        {
+            { x => x.CurrentShift, shift.ChosenShift }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ShiftSelectDialog>("指定班別", param, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: ShiftSelectDialog.SelectedShiftDto selectedShiftDto })
+        {
+            //檢查是否為原有
+            //加入指班指休
+            var shiftInfo = shift.ShiftInfo;
+            //如果原有 刪除指班指休
+            if (shift.ChosenShift != null)
+            {
+                if(shift.ChosenShift.Pto)
+                    PtoStaffList[shift.Date].Remove(shift.StaffId);
+                else if(shift.ChosenShift.DayOff)
+                    VacationList[shift.Date].Remove(shift.StaffId);
+                else if (shift.ChosenShift.SelectedShift==ShiftSelectDialog.Shift.上班
+                    &&AssignedShiftList.TryGetValue(shift.StaffId, out var shiftDic))
+                    shiftDic.Remove(shift.Date);
+            }
+
+            if (selectedShiftDto.SelectedShift == ShiftSelectDialog.Shift.無)
+                shift.ChosenShift = null;
+            else if (selectedShiftDto.DayOff)
+            {
+                shiftInfo = new ShiftInfo();
+                if (selectedShiftDto.Pto)
+                    if (PtoStaffList.TryGetValue(shift.Date, out var ids))
+                        ids.Add(shift.StaffId);
+                    else PtoStaffList[shift.Date] = [shift.StaffId];
+                else if (VacationList.TryGetValue(shift.Date, out var ids))
+                    ids.Add(shift.StaffId);
+                else VacationList[shift.Date] = [shift.StaffId];
+            }
+            else
+            {
+                shiftInfo = new ShiftInfo(selectedShiftDto.StartHalfHr, selectedShiftDto.WorkHr);
+                if (AssignedShiftList.TryGetValue(shift.StaffId, out var shiftDic))
+                    shiftDic[shift.Date] = shiftInfo;
+                else AssignedShiftList[shift.StaffId] = new Dictionary<DateOnly, ShiftInfo>() { [shift.Date] = shiftInfo };
+            }
+
+            shift.Msg = _getShiftStr(shiftInfo, selectedShiftDto.Pto);
+            shift.ChosenShift = selectedShiftDto;
+        }
+    }
+
+    private string SelectShiftClass(ShiftItem shift)
+    {
+        if (shift.ChosenShift == null || shift.ChosenShift.SelectedShift == ShiftSelectDialog.Shift.無)
+            return "";
+        return "td-border";
     }
 
 }

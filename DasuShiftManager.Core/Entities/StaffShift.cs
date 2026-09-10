@@ -1,5 +1,6 @@
 ﻿
 using System.Runtime.InteropServices;
+using DasuShiftManager.Shared;
 
 namespace DasuShiftManager.Core.Entities;
 

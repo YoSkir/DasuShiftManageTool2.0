@@ -1,4 +1,5 @@
 ﻿using DasuShiftManager.Core.Entities;
+using DasuShiftManager.Shared;
 
 namespace DasuShiftManager.Core.Data;
 

@@ -1,0 +1,103 @@
+﻿@using DasuShiftManager.Core.Entities
+<MudDialog>
+    <TitleContent>
+        指定班別
+    </TitleContent>
+    <DialogContent>
+        <MudSelect
+            @bind-Value="SelectedShift"
+            AdornmentColor="Color.Tertiary">
+            @foreach (var type in Enum.GetValues<Shift>())
+            {
+                <MudSelectItem Value="@type"/>
+            }
+        </MudSelect>
+        @if (SelectedShift==Shift.上班)
+        {
+            <MudSelect T="int" 
+                       Label="上班時間" 
+                       @bind-Value="@StartHalfHr" 
+                       Dense="true">
+                <MudSelectItem Value="0">9:00</MudSelectItem>
+                <MudSelectItem Value="4">11:00</MudSelectItem>
+                <MudSelectItem Value="9">13:30</MudSelectItem>
+                <MudSelectItem Value="13">15:30</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="int" Label="工時" @bind-Value="@WorkHr" Dense="true">
+                <MudSelectItem Value="13">6小</MudSelectItem>
+                <MudSelectItem Value="17">8小</MudSelectItem>
+                <MudSelectItem Value="22">10小</MudSelectItem>
+                <MudSelectItem Value="26">12小</MudSelectItem>
+            </MudSelect>
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (_deleteButton)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="Delete">刪除</MudButton>
+        }
+        <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Tertiary" OnClick="Submit">儲存</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+    // 接收傳入的目前班別
+    [Parameter] public SelectedShiftDto? CurrentShift { get; set; }
+    
+    public enum Shift
+    {
+        無,
+        指休,
+        特休,
+        上班
+    }
+
+    public Shift SelectedShift { get; set; }
+    public int StartHalfHr { get; set; }
+    public int WorkHr { get; set; }
+    private bool _deleteButton = false;
+
+    protected override void OnInitialized()
+    {
+        if (CurrentShift != null)
+        {
+            SelectedShift = CurrentShift.SelectedShift;
+            StartHalfHr = CurrentShift.StartHalfHr;
+            WorkHr = CurrentShift.WorkHr;
+            _deleteButton = true;
+        }
+    }
+    
+    private void Submit()
+    {
+        CurrentShift = SelectedShift switch
+        {
+            Shift.無 => null,
+            Shift.上班 => new SelectedShiftDto() { SelectedShift = SelectedShift, StartHalfHr = StartHalfHr, WorkHr = WorkHr },
+            Shift.特休 => new SelectedShiftDto() { SelectedShift = SelectedShift, DayOff = true, Pto = true },
+            Shift.指休 => new SelectedShiftDto() { SelectedShift = SelectedShift, DayOff = true },
+            _ => CurrentShift
+        };
+        MudDialog.Close(DialogResult.Ok(CurrentShift));
+    }
+    private void Delete()
+    {
+        CurrentShift=new SelectedShiftDto(){SelectedShift = Shift.無};
+        MudDialog.Close(DialogResult.Ok(CurrentShift));
+    }
+    private void Cancel() => MudDialog.Cancel();
+
+
+    public class SelectedShiftDto
+    {
+        public Shift SelectedShift { get; set; }
+        public int StartHalfHr { get; set; }
+        public int WorkHr { get; set; }
+        public bool Pto { get; set; } = false;
+        public bool DayOff { get; set; } = false;
+    }
+
+}

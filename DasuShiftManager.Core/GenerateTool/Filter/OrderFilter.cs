@@ -91,7 +91,7 @@ public class OrderFilter : IShiftFilter
         if (targetId > 0)
         {
             temp.AddRange(priorityShift
-                .Where(s => s.StaffShifts[targetId].Type == Entities.ShiftType.Early));
+                .Where(s => s.StaffShifts[targetId].Type == Shared.ShiftType.Early));
             if (temp.Count > 0)
             {
                 priorityShift.Clear();

@@ -63,7 +63,7 @@ public class EasyWeightedFilter : IShiftFilter
                     .Where(s => dailyShift.StaffShifts[s.Id].DayOff).ToList().Count > 0)
                 dailyShift.AddWeightScore(WeightType.連上天數,2);
             //早班平均
-            if(minEarlyShiftStaffIds.Where(s=>dailyShift.StaffShifts[s].Type==Entities.ShiftType.Early).ToList().Count>0)
+            if(minEarlyShiftStaffIds.Where(s=>dailyShift.StaffShifts[s].Type==Shared.ShiftType.Early).ToList().Count>0)
                 dailyShift.AddWeightScore(WeightType.早班平均,2);
         }
         var topScore=shifts.Max(s=>s.WeightedScore);

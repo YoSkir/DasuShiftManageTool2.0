@@ -5,6 +5,7 @@ using DasuShiftManager.Core.GenerateTool.Filter;
 using DasuShiftManager.Core.GenerateTool.ResultSaver;
 // using DasuShiftManager.Core.Log;
 using DasuShiftManager.Core.Shift;
+using DasuShiftManager.Shared;
 
 namespace DasuShiftManager.Core.GenerateTool;
 

@@ -3,6 +3,7 @@ using DasuShiftManager.Core.Entities;
 using DasuShiftManager.Core.GenerateTool;
 using DasuShiftManager.Core.GenerateTool.AssignTool;
 using DasuShiftManager.Core.GenerateTool.ResultSaver;
+using DasuShiftManager.Shared;
 
 namespace DasuShiftManager.Core;
 
@@ -11,7 +12,6 @@ namespace DasuShiftManager.Core;
 /// </summary>
 public class ShiftCreateTool(IDataGetter dataGetter)
 {
-    public ShiftCreateContext Context { get; set; }
     /// <summary>
     /// 產生指定年月的排班結果。
     /// </summary>
@@ -24,17 +24,24 @@ public class ShiftCreateTool(IDataGetter dataGetter)
     {
         var setting = dataGetter.GetSetting();
         if(setting==null) throw new Exception("No settings found");
-        return GenerateThisMonthShift(year, month, generator,setting.ShiftStartDay,setting.MinMonthWorkHrs,setting.MinMonthRestDays);
+        return GenerateThisMonthShift(year, month, generator, new ShiftGenerateDto()
+            {
+                Day = setting.ShiftStartDay,
+                MinWorkHrs = setting.MinMonthWorkHrs,
+                MinRestDay = setting.MinMonthRestDays,
+                VacationList = dataGetter.GetVacationStaffList(),
+                AssignedShiftList = dataGetter.GetAssignedShiftList(),
+                PtoStaffList = dataGetter.GetPtoStaffList()
+            });
     }
     
-    public ShiftCreateResult GenerateThisMonthShift(int year,int month,IShiftGenerator generator,int day,int minWorkHrs,int minRestDay)
+    public ShiftCreateResult GenerateThisMonthShift(int year,int month,IShiftGenerator generator,ShiftGenerateDto dto)
     {
         var setting = dataGetter.GetSetting();
         if(setting==null) throw new Exception("No settings found");
-        setting.ShiftStartDay = day;
-        setting.MinMonthWorkHrs=minWorkHrs;
-        setting.MinMonthRestDays=minRestDay;
-        var vacationData = dataGetter.GetVacationStaffList();
+        setting.ShiftStartDay = dto.Day;
+        setting.MinMonthWorkHrs=dto.MinWorkHrs;
+        setting.MinMonthRestDays=dto.MinRestDay;
         var staffList = dataGetter.GetStaffList();
         if (staffList.Count == 0) throw new Exception("Staff not found");
         
@@ -42,9 +49,14 @@ public class ShiftCreateTool(IDataGetter dataGetter)
         
         var currentDate = new DateOnly(year, month, setting.ShiftStartDay);
         var assignTool = new EveryPossibleAssignTool();
-        Context = new ShiftCreateContext(setting,currentDate,dataGetter);
-        generator.StartGenerate(Context,assignTool);
+        var context = new ShiftCreateContext(setting,currentDate,dataGetter)
+        {
+            VacationData = dto.VacationList,
+            AssignedShift = dto.AssignedShiftList,
+            PtoData = dto.PtoStaffList
+        };
+        generator.StartGenerate(context,assignTool);
         
-        return Context.GenerateResult();
+        return context.GenerateResult();
     }
 }

@@ -1,4 +1,6 @@
 ﻿
+using DasuShiftManager.Shared;
+
 namespace DasuShiftManager.Core.Entities;
 
 public class DailyShift

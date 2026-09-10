@@ -117,7 +117,7 @@ public class WeightedFilter:IShiftFilter
                 if(staffIdList==null)break;
                 foreach (var staffId in staffIdList.Where(s=>!dailyShift.StaffShifts[s].DayOff))
                 {
-                    if(dailyShift.StaffShifts[staffId].Type ==Entities.ShiftType.Early)
+                    if(dailyShift.StaffShifts[staffId].Type ==Shared.ShiftType.Early)
                         score+=Math.Max(0,weight-rank);
                     else score-=Math.Max(0,weight-rank);
                 }
